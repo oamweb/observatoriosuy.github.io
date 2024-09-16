@@ -1,9 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mi tabla CSV</title>
+    <title>Mostrar primer dato de la tabla CSV</title>
 </head>
 <body>
-    <iframe src="https://raw.githubusercontent.com/oamweb/observatoriosuy.github.io/datos.csv" width="100%" height="400px"></iframe>
+    <p id="firstRow"></p>
+
+    <script>
+        fetch("https://raw.githubusercontent.com/tu-usuario/tu-repositorio/main/tu-archivo.csv")
+        .then(response => response.text())
+        .then(data => {
+            const rows = data.split('\n');
+            const firstRow = rows[0].split(',');
+
+            // Mostrar el primer dato en un párrafo
+            document.getElementById('firstRow').textContent = firstRow[0];
+        });
+    </script>
 </body>
 </html>
