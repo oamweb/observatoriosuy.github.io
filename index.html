@@ -3,17 +3,7 @@
 <head>
     <title>Datos de mi Tabla</title>
     <style>
-        table, th, td {
-            border: 1px solid black;
-        }
-        .filter-buttons button {
-            margin: 5px;
-            padding: 8px 16px;
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
+        /* Tus estilos CSS aquí */
     </style>
 </head>
 <body>
@@ -27,41 +17,35 @@
         const table = document.getElementById('myTable');
         const filterButtonsContainer = document.querySelector('.filter-buttons');
 
+        // Función para crear la tabla
+        function createTable(data) {
+            // Código para crear los encabezados y filas de la tabla
+            // ... (tu código existente aquí)
+        }
+
         axios.get(apiUrl)
             .then(response => {
                 const data = response.data;
-
-                // Crear encabezados de la tabla
-                // ... (código similar al anterior)
-
-                // Crear filas de datos
-                data.forEach(row => {
-                    // ... (código similar al anterior)
-                });
+                createTable(data); // Llamamos a la función para crear la tabla con los datos obtenidos
 
                 // Obtener departamentos únicos y crear botones
                 const departments = new Set(data.map(row => row.Departamento));
                 departments.forEach(department => {
                     const button = document.createElement('button');
                     button.textContent = department;
-                    button.onclick = () => filterData(department);
+                    button.onclick = () => filterData(data, department); // Pasamos los datos y el departamento a filterData
                     filterButtonsContainer.appendChild(button);
                 });
-
-                // Mostrar todos los datos inicialmente
-                filterData();
             })
             .catch(error => {
                 console.error('Error al obtener datos:', error);
             });
 
-        function filterData(department = '') {
+        // Función para filtrar los datos y actualizar la tabla
+        function filterData(data, department) {
             const filteredData = data.filter(row => row.Departamento === department);
-            // Limpiar la tabla antes de agregar los nuevos datos
-            table.innerHTML = '';
-
-            // Crear encabezados y filas de la tabla filtrada
-            // ... (código similar al anterior)
+            // Limpiar la tabla y crear la tabla filtrada
+            // ... (tu código existente aquí)
         }
     </script>
 </body>
