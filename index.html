@@ -23,6 +23,47 @@
         // Aquí va todo tu código JavaScript
         const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
 
+// Función para cargar los datos desde la API
+function getDataFromApi() {
+    axios.get(apiURL)
+        .then(response => {
+            const data = response.data;   
+
+            // Actualizar el encabezado y el fondo (si es necesario)
+            // ...
+            generateFilterButtons(data);
+            displayFilteredEvents(data); // Mostrar todos los eventos inicialmente
+        })
+        .catch(error => {
+            console.error('Error al obtener datos:', error);
+        });
+}
+
+// Función para generar botones de filtro dinámicamente
+function generateFilterButtons(data) {
+    // ... (igual al código original)
+}
+
+// Función para filtrar eventos por tag
+function filterEventsByTag(tag) {
+    const filteredEvents = data.filter(row => row.tag === tag);
+    displayFilteredEvents(filteredEvents);
+}
+
+// Función para mostrar eventos filtrados
+function displayFilteredEvents(events) {
+    const eventList = document.querySelector('.event-list');
+    eventList.innerHTML = '';
+
+    events.forEach(row => {
+        // ... (igual al código original)
+    });
+}
+
+// Llama a la función para cargar los datos cuando la página se ha cargado
+window.onload = function() {
+    getDataFromApi();
+};
         // ... Resto de tu código JavaScript
     </script>
 </body>
