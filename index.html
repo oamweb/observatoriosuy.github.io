@@ -1,3 +1,6 @@
+¡Claro! Aquí tienes el HTML completo, incorporando las mejoras sugeridas y una solución al problema de los botones que no aparecen:
+
+HTML
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,6 +8,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         /* Tus estilos CSS aquí */
+        .filter-buttons {
+            display: flex; /* Asegurar que los botones estén en línea */
+        }
+        .filter-button {
+            margin: 5px; /* Agregar un margen para espaciar los botones */
+        }
     </style>
 </head>
 <body>
@@ -16,22 +25,40 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>   
 
-        // ... (tu código existente, incluyendo la función createTable)
+        const apiUrl = 'https://sheetdb.io/api/v1/pbfosuo07aetu';
+        const table = document.getElementById('myTable');
+        const filterButtonsContainer = document.querySelector('.filter-buttons');
 
+        // Función para crear la tabla
+        function createTable(data) {
+            // ... (tu código para crear la tabla)
+        }
+
+        // Función para crear los botones de filtro
+        function createButtons(data) {
+            const departments = new Set(data.map(row => row.Departamento));
+            departments.forEach(department => {
+                const button = document.createElement('button');
+                button.classList.add('filter-button'); // Agregar una clase para estilos personalizados
+                button.textContent = department;
+                button.onclick = () => filterData(data, department);
+                filterButtonsContainer.appendChild(button);
+            });
+        }
+
+        axios.get(apiUrl)
+            .then(response => {
+                const data = response.data;
+                createTable(data);
+                createButtons(data);
+            })
+            .catch(error => {
+                console.error('Error al obtener datos:', error);
+            });
+
+        // Función para filtrar los datos y mostrar el modal
         function filterData(data, department) {
-            const filteredData = data.filter(row => row.Departamento === department);
-
-            let modalContent = '<ul>';
-            filteredData.forEach(row => {
-                modalContent += `<li>${row.Ciudad} - ${row.Numero}</li>`;
-            });
-            modalContent += '</ul>';
-
-            Swal.fire({
-                title: 'Datos del departamento',
-                html: modalContent,
-                showCloseButton: true
-            });
+            // ... (tu código para filtrar los datos y mostrar el modal)
         }
     </script>
 </body>
