@@ -1,62 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Datos de mi Tabla</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <style>
-        /* Tus estilos CSS aquí */
-        .filter-buttons {
-            display: flex; /* Asegurar que los botones estén en línea */
-        }
-        .filter-button {
-            margin: 5px; /* Agregar un margen para espaciar los botones */
-        }
-    </style>
+    <title>Mi página</title>
 </head>
 <body>
-    <h1>Datos de mi Tabla</h1>
-    <div class="filter-buttons"></div>
-    <table id="myTable"></table>
+    <button id="miBoton">Mostrar lista</button>
+    <ul id="miLista"></ul>
 
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>   
+    <script>
+        const miBoton = document.getElementById('miBoton');
+        const miLista = document.getElementById('miLista');
 
-        const apiUrl = 'https://sheetdb.io/api/v1/pbfosuo07aetu';
-        const table = document.getElementById('myTable');
-        const filterButtonsContainer = document.querySelector('.filter-buttons');
+        miBoton.addEventListener('click', () => {
+            const datos = ['Elemento 1', 'Elemento 2', 'Elemento 3']; // Sustituye con tus datos
 
-        // Función para crear la tabla
-        function createTable(data) {
-            // ... (tu código para crear la tabla)
-        }
-
-        // Función para crear los botones de filtro
-        function createButtons(data) {
-            const departments = new Set(data.map(row => row.Departamento));
-            departments.forEach(department => {
-                const button = document.createElement('button');
-                button.classList.add('filter-button'); // Agregar una clase para estilos personalizados
-                button.textContent = department;
-                button.onclick = () => filterData(data, department);
-                filterButtonsContainer.appendChild(button);
+            datos.forEach(elemento => {
+                const li = document.createElement('li');
+                li.textContent = elemento;
+                miLista.appendChild(li);
             });
-        }
-
-        axios.get(apiUrl)
-            .then(response => {
-                const data = response.data;
-                createTable(data);
-                createButtons(data);
-            })
-            .catch(error => {
-                console.error('Error al obtener datos:', error);
-            });
-
-        // Función para filtrar los datos y mostrar el modal
-        function filterData(data, department) {
-            // ... (tu código para filtrar los datos y mostrar el modal)
-        }
+        });
     </script>
 </body>
 </html>
