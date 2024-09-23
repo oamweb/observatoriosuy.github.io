@@ -1,70 +1,47 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista   
- de Eventos Filtrable</title>
+    <title>Datos de mi Tabla</title>
     <style>
-        /* Tus estilos CSS aquí */
+        table, th, td {
+            border: 1px solid black;
+        }
     </style>
 </head>
 <body>
-    <h1>Eventos próximos</h1>
-
-    <div class="filter-buttons">
-        </div>
-
-    <div class="event-list">
-        </div>
+    <h1>Datos de mi Tabla</h1>
+    <table id="myTable"></table>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        // Aquí va todo tu código JavaScript
-        const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
+        const apiUrl = 'https://sheetdb.io/api/v1/pbfosuo07aetu';
 
-// Función para cargar los datos desde la API
-function getDataFromApi() {
-    axios.get(apiURL)
-        .then(response => {
-            const data = response.data;   
+        axios.get(apiUrl)
+            .then(response => {
+                const data = response.data;
+                const table = document.getElementById('myTable');
 
-            // Actualizar el encabezado y el fondo (si es necesario)
-            // ...
-            generateFilterButtons(data);
-            displayFilteredEvents(data); // Mostrar todos los eventos inicialmente
-        })
-        .catch(error => {
-            console.error('Error al obtener datos:', error);
-        });
-}
+                // Crear encabezados de la tabla
+                let headerRow = '<tr>';
+                for (const key in data[0]) {
+                    headerRow += `<th>${key}</th>`;
+                }
+                headerRow += '</tr>';
+                table.innerHTML += headerRow;
 
-// Función para generar botones de filtro dinámicamente
-function generateFilterButtons(data) {
-    // ... (igual al código original)
-}
-
-// Función para filtrar eventos por tag
-function filterEventsByTag(tag) {
-    const filteredEvents = data.filter(row => row.tag === tag);
-    displayFilteredEvents(filteredEvents);
-}
-
-// Función para mostrar eventos filtrados
-function displayFilteredEvents(events) {
-    const eventList = document.querySelector('.event-list');
-    eventList.innerHTML = '';
-
-    events.forEach(row => {
-        // ... (igual al código original)
-    });
-}
-
-// Llama a la función para cargar los datos cuando la página se ha cargado
-window.onload = function() {
-    getDataFromApi();
-};
-        // ... Resto de tu código JavaScript
+                // Crear filas de datos
+                data.forEach(row => {
+                    let rowData = '<tr>';
+                    for (const key in row) {
+                        rowData += `<td>${row[key]}</td>`;
+                    }
+                    rowData += '</tr>';
+                    table.innerHTML += rowData;
+                });
+            })
+            .catch(error => {
+                console.error('Error al obtener datos:', error);
+            });
     </script>
 </body>
 </html>
