@@ -6,42 +6,63 @@
         table, th, td {
             border: 1px solid black;
         }
+        .filter-buttons button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <h1>Datos de mi Tabla</h1>
+    <div class="filter-buttons"></div>
     <table id="myTable"></table>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const apiUrl = 'https://sheetdb.io/api/v1/pbfosuo07aetu';
+        const table = document.getElementById('myTable');
+        const filterButtonsContainer = document.querySelector('.filter-buttons');
 
         axios.get(apiUrl)
             .then(response => {
                 const data = response.data;
-                const table = document.getElementById('myTable');
 
                 // Crear encabezados de la tabla
-                let headerRow = '<tr>';
-                for (const key in data[0]) {
-                    headerRow += `<th>${key}</th>`;
-                }
-                headerRow += '</tr>';
-                table.innerHTML += headerRow;
+                // ... (código similar al anterior)
 
                 // Crear filas de datos
                 data.forEach(row => {
-                    let rowData = '<tr>';
-                    for (const key in row) {
-                        rowData += `<td>${row[key]}</td>`;
-                    }
-                    rowData += '</tr>';
-                    table.innerHTML += rowData;
+                    // ... (código similar al anterior)
                 });
+
+                // Obtener departamentos únicos y crear botones
+                const departments = new Set(data.map(row => row.Departamento));
+                departments.forEach(department => {
+                    const button = document.createElement('button');
+                    button.textContent = department;
+                    button.onclick = () => filterData(department);
+                    filterButtonsContainer.appendChild(button);
+                });
+
+                // Mostrar todos los datos inicialmente
+                filterData();
             })
             .catch(error => {
                 console.error('Error al obtener datos:', error);
             });
+
+        function filterData(department = '') {
+            const filteredData = data.filter(row => row.Departamento === department);
+            // Limpiar la tabla antes de agregar los nuevos datos
+            table.innerHTML = '';
+
+            // Crear encabezados y filas de la tabla filtrada
+            // ... (código similar al anterior)
+        }
     </script>
 </body>
 </html>
