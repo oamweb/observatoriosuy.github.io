@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrusel de Eventos</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css">
+  <title>Eventos próximos</title>
   <style>
     /* Establecer el fondo de la página */
     body {
@@ -13,10 +12,7 @@
       color: white; /* Cambiar el color del texto a blanco */
     }
 
-    /* Estilos del carrusel */
-    .slick-slide {
-      padding: 10px;
-    }
+    /* Estilos de la lista de eventos */
     .event-list {
       margin-top: 20px;
     }
@@ -72,7 +68,6 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/sxwl3gmc6kg3o';
@@ -88,7 +83,6 @@
           document.querySelector('h1').textContent = headerText;
           document.body.style.background = `url('${data[1]["Pagina"]}') no-repeat center center fixed`;
           document.body.style.backgroundSize = 'cover';
-          displayCarouselData(data);
           generateFilterButtons(data);
         })
         .catch(error => {
@@ -96,7 +90,35 @@
         });
     }
 
-   
+    // Función para generar botones de filtro dinámicamente
+    function generateFilterButtons(data) {
+      const uniqueTags = [...new Set(data.map(item => item.tag))];
+      const filterButtonsContainer = document.querySelector('.filter-buttons');
+      filterButtonsContainer.innerHTML = '';
+
+      uniqueTags.forEach(tag => {
+        const button = document.createElement('button');
+        button.textContent = tag;
+        button.onclick = function() {
+          filterEventsByTag(tag);
+        };
+        filterButtonsContainer.appendChild(button);
+      });
+    }
+
+    // Función para filtrar eventos por tag
+    function filterEventsByTag(tag) {
+      axios.get(apiURL)
+        .then(response => {
+          const data = response.data;
+          const filteredEvents = data.filter(row => row.tag === tag);
+          displayFilteredEvents(filteredEvents);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+        });
+    }
+
     // Función para mostrar eventos filtrados
     function displayFilteredEvents(events) {
       const eventList = document.querySelector('.event-list');
