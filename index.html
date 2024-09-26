@@ -52,6 +52,14 @@
     .filter-buttons button:hover {
       background-color: #45a049;
     }
+
+    /* Estilos para mostrar los detalles de los eventos */
+    .event-details {
+      margin-top: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -65,6 +73,11 @@
   <!-- Lista de eventos filtrados -->
   <div class="event-list">
     <!-- Los eventos filtrados se agregarán aquí -->
+  </div>
+
+  <!-- Contenedor para mostrar los detalles del evento -->
+  <div class="event-details" style="display: none;">
+    <!-- Los detalles del evento se agregarán aquí -->
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -135,9 +148,16 @@
       });
     }
 
-    // Función para mostrar los detalles del evento (opcional, si se requiere)
+    // Función para mostrar los detalles del evento al presionar un botón
     function displayEventDetails(event) {
-      alert(`Detalles del evento:\nEvento: ${event.Evento}\nNúmero: ${event.Numero}\nDescripción: ${event.Descripción}`);
+      const eventDetailsContainer = document.querySelector('.event-details');
+      eventDetailsContainer.style.display = 'block';
+      eventDetailsContainer.innerHTML = `
+        <p class="event-name">${event.Evento}</p>
+        <p>Número: ${event.Numero}</p>
+        <p>Descripción: ${event.Descripción}</p>
+        ${event.Fotos ? `<img class="event-image" src="${event.Fotos}" alt="${event.Evento}">` : ''}
+      `;
     }
 
     // Llama a la función para cargar los datos cuando la página se ha cargado
