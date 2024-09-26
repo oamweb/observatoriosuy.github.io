@@ -92,26 +92,26 @@
 
     // Función para generar botones de filtro dinámicamente
     function generateFilterButtons(data) {
-      const uniqueTags = [...new Set(data.map(item => item.tag))];
+      const uniqueDepartamentos = [...new Set(data.map(item => item.Departamento))];
       const filterButtonsContainer = document.querySelector('.filter-buttons');
       filterButtonsContainer.innerHTML = '';
 
-      uniqueTags.forEach(tag => {
+      uniqueDepartamentos.forEach(departamento => {
         const button = document.createElement('button');
-        button.textContent = tag;
+        button.textContent = departamento;
         button.onclick = function() {
-          filterEventsByTag(tag);
+          filterEventsByDepartamento(departamento);
         };
         filterButtonsContainer.appendChild(button);
       });
     }
 
-    // Función para filtrar eventos por tag
-    function filterEventsByTag(tag) {
+    // Función para filtrar eventos por Departamento
+    function filterEventsByDepartamento(departamento) {
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          const filteredEvents = data.filter(row => row.tag === tag);
+          const filteredEvents = data.filter(row => row.Departamento === departamento);
           displayFilteredEvents(filteredEvents);
         })
         .catch(error => {
