@@ -23,17 +23,17 @@
       line-height: 2; /* Añade un interlineado doble */
     }
 
-    /* Estilos para los botones de evento */
+    /* Estilos para los botones de eventos */
     .event-button {
-      margin: 10px;
-      padding: 10px;
-      background-color: #2196F3;
+      margin: 5px;
+      padding: 8px 16px;
+      background-color: #4CAF50;
       border: none;
       color: white;
       cursor: pointer;
     }
     .event-button:hover {
-      background-color: #0b7dda;
+      background-color: #45a049;
     }
 
     /* Estilos para los botones de filtro */
@@ -64,11 +64,8 @@
 
   <!-- Lista de eventos filtrados -->
   <div class="event-list">
-    <!-- Los botones de eventos filtrados se agregarán aquí -->
+    <!-- Los eventos filtrados se agregarán aquí -->
   </div>
-
-  <!-- Contenedor para mostrar los detalles del evento -->
-  <div id="event-details" style="display: none; margin-top: 20px; color: white;"></div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -95,26 +92,26 @@
 
     // Función para generar botones de filtro dinámicamente
     function generateFilterButtons(data) {
-      const uniqueDepartamentos = [...new Set(data.map(item => item.Departamento))];
+      const uniqueDepartments = [...new Set(data.map(item => item.Departamento))];
       const filterButtonsContainer = document.querySelector('.filter-buttons');
       filterButtonsContainer.innerHTML = '';
 
-      uniqueDepartamentos.forEach(departamento => {
+      uniqueDepartments.forEach(department => {
         const button = document.createElement('button');
-        button.textContent = departamento;
+        button.textContent = department;
         button.onclick = function() {
-          filterEventsByDepartamento(departamento);
+          filterEventsByDepartment(department);
         };
         filterButtonsContainer.appendChild(button);
       });
     }
 
-    // Función para filtrar eventos por Departamento y mostrar botones de evento
-    function filterEventsByDepartamento(departamento) {
+    // Función para filtrar eventos por departamento
+    function filterEventsByDepartment(department) {
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          const filteredEvents = data.filter(row => row.Departamento === departamento);
+          const filteredEvents = data.filter(row => row.Departamento === department);
           displayEventButtons(filteredEvents);
         })
         .catch(error => {
@@ -122,17 +119,15 @@
         });
     }
 
-    // Función para mostrar los botones de los eventos filtrados
+    // Función para mostrar botones con "Evento" y "Número"
     function displayEventButtons(events) {
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
-      const eventDetails = document.getElementById('event-details');
-      eventDetails.style.display = 'none';
 
       events.forEach(row => {
         const eventButton = document.createElement('button');
-        eventButton.className = 'event-button';
-        eventButton.textContent = `${row.Evento} - ${row.Fecha}`;
+        eventButton.classList.add('event-button');
+        eventButton.textContent = `${row.Evento} - ${row.Numero}`;
         eventButton.onclick = function() {
           displayEventDetails(row);
         };
@@ -140,16 +135,9 @@
       });
     }
 
-    // Función para mostrar los detalles de un evento
+    // Función para mostrar los detalles del evento (opcional, si se requiere)
     function displayEventDetails(event) {
-      const eventDetails = document.getElementById('event-details');
-      eventDetails.style.display = 'block';
-      eventDetails.innerHTML = `
-        <h2>${event.Evento}</h2>
-        <p>Fecha: ${event.Fecha}</p>
-        <p>Descripción: ${event.Descripción}</p>
-        ${event.Fotos ? `<img class="event-image" src="${event.Fotos}" alt="${event.Evento}">` : ''}
-      `;
+      alert(`Detalles del evento:\nEvento: ${event.Evento}\nNúmero: ${event.Numero}\nDescripción: ${event.Descripción}`);
     }
 
     // Llama a la función para cargar los datos cuando la página se ha cargado
