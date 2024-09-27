@@ -122,7 +122,7 @@
         eventButton.classList.add('event-button');
         
         const numero = row.Numero !== undefined ? row.Numero : 'N/A';
-        eventButton.textContent = `${row.Evento} - ${numero}`;
+        eventButton.textContent = `${row.Ciudad} - ${numero}`;
         
         eventButton.onclick = function() {
           displayEventDetails(row);
@@ -138,10 +138,14 @@
       const numero = event.Numero !== undefined ? event.Numero : 'N/A';
       
       eventDetailsContainer.innerHTML = `
-        <p class="event-name">${event.Evento}</p>
+        <p class="event-name">${event.Ciudad}</p>
         <p>Número: ${numero}</p>
+        <p>Docentes: ${event.Docentes}</p>
+        <p>Telescopio: ${event.Telescopio}</p>
+        <p>Accesorios: ${event.Accesorios}</p>
+        <p>Horario: ${event.Horario}</p>
         <p>Descripción: ${event.Descripción}</p>
-        ${event.Fotos ? `<img class="event-image" src="${event.Fotos}" alt="${event.Evento}">` : ''}
+        ${event.Fotos ? `<img class="event-image" src="${event.Fotos}" alt="${event.Ciudad}">` : ''}
       `;
     }
 
