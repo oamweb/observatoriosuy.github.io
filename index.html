@@ -60,7 +60,6 @@
   </style>
 </head>
 <body>
-  <h1>Eventos próximos</h1>
 
   <div class="filter-buttons"></div>
   <div class="event-list"></div>
@@ -75,8 +74,6 @@
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          const headerText = data[0]["Pagina"];
-          document.querySelector('h1').textContent = headerText;
           generateFilterButtons(data);
         })
         .catch(error => {
@@ -124,9 +121,14 @@
 
         // Verificar si TODOS los campos Telescopio, Accesorios, Horario y Descripción están vacíos
         const areAllFieldsEmpty = !row.Telescopio && !row.Accesorios && !row.Horario && !row.Descripción;
-        
+
+        // Verificar si el campo Atención NO está vacío
+        const isAtencionNotEmpty = row.Atención && row.Atención.trim() !== '';
+
         if (areAllFieldsEmpty) {
           eventButton.style.backgroundColor = 'red'; // Cambiar el color del botón a rojo si todos los campos están vacíos
+        } else if (isAtencionNotEmpty) {
+          eventButton.style.backgroundColor = 'yellow'; // Cambiar el color del botón a amarillo si Atención no está vacío
         }
 
         eventButton.onclick = function() {
