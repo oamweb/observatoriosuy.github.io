@@ -5,25 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eventos próximos</title>
   <style>
-    /* Establecer el fondo de la página */
     body {
       background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
       background-size: cover;
-      color: white; /* Cambiar el color del texto a blanco */
+      color: white;
     }
 
-    /* Estilos de la lista de eventos */
     .event-list {
       margin-top: 20px;
     }
 
-    /* Estilos adicionales para la lista de eventos */
     .event-list div {
-      margin-bottom: 20px; /* Ajusta el espacio entre eventos */
-      line-height: 2; /* Añade un interlineado doble */
+      margin-bottom: 20px;
+      line-height: 2;
     }
 
-    /* Estilos para los botones de eventos */
     .event-button {
       margin: 5px;
       padding: 8px 16px;
@@ -36,7 +32,6 @@
       background-color: #45a049;
     }
 
-    /* Estilos para los botones de filtro */
     .filter-buttons {
       margin-top: 20px;
       text-align: center;
@@ -53,7 +48,6 @@
       background-color: #45a049;
     }
 
-    /* Estilos para mostrar los detalles de los eventos */
     .event-details {
       margin-top: 20px;
       background-color: rgba(0, 0, 0, 0.7);
@@ -65,19 +59,13 @@
 <body>
   <h1>Eventos próximos</h1>
 
-  <!-- Botones de filtros -->
   <div class="filter-buttons">
-    <!-- Los botones de filtro se agregarán aquí -->
   </div>
 
-  <!-- Lista de eventos filtrados -->
   <div class="event-list">
-    <!-- Los eventos filtrados se agregarán aquí -->
   </div>
 
-  <!-- Contenedor para mostrar los detalles del evento -->
   <div class="event-details" style="display: none;">
-    <!-- Los detalles del evento se agregarán aquí -->
   </div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -85,17 +73,12 @@
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/pbfosuo07aetu';
 
-    // Función para cargar los datos desde la API
     function getDataFromApi() {
       axios.get(apiURL)
         .then(response => {
           const data = response.data;
-          // Obtener el texto de la segunda fila y sexta columna
           const headerText = data[0]["Pagina"];
-          // Actualizar el texto del encabezado
           document.querySelector('h1').textContent = headerText;
-          document.body.style.background = `url('${data[1]["Pagina"]}') no-repeat center center fixed`;
-          document.body.style.backgroundSize = 'cover';
           generateFilterButtons(data);
         })
         .catch(error => {
@@ -103,7 +86,6 @@
         });
     }
 
-    // Función para generar botones de filtro dinámicamente
     function generateFilterButtons(data) {
       const uniqueDepartments = [...new Set(data.map(item => item.Departamento))];
       const filterButtonsContainer = document.querySelector('.filter-buttons');
@@ -119,7 +101,6 @@
       });
     }
 
-    // Función para filtrar eventos por departamento
     function filterEventsByDepartment(department) {
       axios.get(apiURL)
         .then(response => {
@@ -132,7 +113,6 @@
         });
     }
 
-    // Función para mostrar botones con "Evento" y "Número"
     function displayEventButtons(events) {
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
@@ -140,7 +120,10 @@
       events.forEach(row => {
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        eventButton.textContent = `${row.Evento} - ${row.Numero}`;
+        
+        const numero = row.Numero !== undefined ? row.Numero : 'N/A';
+        eventButton.textContent = `${row.Evento} - ${numero}`;
+        
         eventButton.onclick = function() {
           displayEventDetails(row);
         };
@@ -148,19 +131,20 @@
       });
     }
 
-    // Función para mostrar los detalles del evento al presionar un botón
     function displayEventDetails(event) {
       const eventDetailsContainer = document.querySelector('.event-details');
       eventDetailsContainer.style.display = 'block';
+      
+      const numero = event.Numero !== undefined ? event.Numero : 'N/A';
+      
       eventDetailsContainer.innerHTML = `
         <p class="event-name">${event.Evento}</p>
-        <p>Número: ${event.Numero}</p>
+        <p>Número: ${numero}</p>
         <p>Descripción: ${event.Descripción}</p>
         ${event.Fotos ? `<img class="event-image" src="${event.Fotos}" alt="${event.Evento}">` : ''}
       `;
     }
 
-    // Llama a la función para cargar los datos cuando la página se ha cargado
     window.onload = function() {
       getDataFromApi();
     };
