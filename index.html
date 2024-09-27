@@ -82,7 +82,8 @@
     }
 
     function generateFilterButtons(data) {
-      const uniqueDepartments = [...new Set(data.map(item => item.Departamento))];
+      // Obtener y ordenar departamentos alfabéticamente
+      const uniqueDepartments = [...new Set(data.map(item => item.Departamento))].sort();
       const filterButtonsContainer = document.querySelector('.filter-buttons');
       filterButtonsContainer.innerHTML = '';
 
@@ -112,6 +113,9 @@
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
 
+      // Ordenar los eventos por Ciudad alfabéticamente
+      events.sort((a, b) => a.Ciudad.localeCompare(b.Ciudad));
+
       events.forEach(row => {
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
@@ -128,7 +132,7 @@
         if (areAllFieldsEmpty) {
           eventButton.style.backgroundColor = 'red'; // Cambiar el color del botón a rojo si todos los campos están vacíos
         } else if (isAtencionNotEmpty) {
-          eventButton.style.backgroundColor = 'yellow'; // Cambiar el color del botón a amarillo si Atención no está vacío
+          eventButton.style.backgroundColor = '#FFC107'; // Cambiar el color del botón a amarillo oscuro si Atención no está vacío
         }
 
         eventButton.onclick = function() {
