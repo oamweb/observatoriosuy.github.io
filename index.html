@@ -28,6 +28,7 @@
       color: white;
       cursor: pointer;
     }
+
     .event-button:hover {
       background-color: #45a049;
     }
@@ -36,6 +37,7 @@
       margin-top: 20px;
       text-align: center;
     }
+
     .filter-buttons button {
       margin: 5px;
       padding: 8px 16px;
@@ -44,6 +46,7 @@
       color: white;
       cursor: pointer;
     }
+
     .filter-buttons button:hover {
       background-color: #45a049;
     }
@@ -57,16 +60,11 @@
   </style>
 </head>
 <body>
-  <h1>Laboratorios</h1>
+  <h1>Eventos próximos</h1>
 
-  <div class="filter-buttons">
-  </div>
-
-  <div class="event-list">
-  </div>
-
-  <div class="event-details" style="display: none;">
-  </div>
+  <div class="filter-buttons"></div>
+  <div class="event-list"></div>
+  <div class="event-details" style="display: none;"></div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -123,7 +121,14 @@
         
         const numero = row.Numero !== undefined ? row.Numero : 'N/A';
         eventButton.textContent = `${row.Ciudad} - ${numero}`;
+
+        // Verificar si TODOS los campos Telescopio, Accesorios, Horario y Descripción están vacíos
+        const areAllFieldsEmpty = !row.Telescopio && !row.Accesorios && !row.Horario && !row.Descripción;
         
+        if (areAllFieldsEmpty) {
+          eventButton.style.backgroundColor = 'red'; // Cambiar el color del botón a rojo si todos los campos están vacíos
+        }
+
         eventButton.onclick = function() {
           displayEventDetails(row);
         };
