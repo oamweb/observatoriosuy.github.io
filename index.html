@@ -113,8 +113,17 @@
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
 
-      // Ordenar los eventos por Ciudad alfabéticamente
-      events.sort((a, b) => a.Ciudad.localeCompare(b.Ciudad));
+      // Ordenar los eventos por Ciudad alfabéticamente, y luego por Numero
+      events.sort((a, b) => {
+        const cityComparison = a.Ciudad.localeCompare(b.Ciudad);
+        if (cityComparison === 0) {
+          // Si las ciudades son iguales, comparar por número (conversión a número si es posible)
+          const numA = parseInt(a.Numero) || 0;
+          const numB = parseInt(b.Numero) || 0;
+          return numA - numB;
+        }
+        return cityComparison;
+      });
 
       events.forEach(row => {
         const eventButton = document.createElement('button');
