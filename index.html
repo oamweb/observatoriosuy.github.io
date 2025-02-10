@@ -9,53 +9,84 @@
       background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
       background-size: cover;
       color: white;
+      font-family: Arial, sans-serif;
     }
 
-    .event-list {
+    .event-list, .filter-buttons {
+      text-align: center;
       margin-top: 20px;
     }
 
     .event-list div {
-      margin-bottom: 20px;
-      line-height: 2;
+      margin-bottom: 10px;
     }
 
-    .event-button {
+    .event-button, .filter-buttons button {
       margin: 5px;
-      padding: 8px 16px;
-      background-color: #4CAF50;
+      padding: 10px 16px;
       border: none;
       color: white;
       cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .event-button {
+      background-color: #4CAF50;
     }
 
     .event-button:hover {
       background-color: #45a049;
     }
 
-    .filter-buttons {
-      margin-top: 20px;
-      text-align: center;
-    }
-
     .filter-buttons button {
-      margin: 5px;
-      padding: 8px 16px;
-      background-color: #4CAF50;
-      border: none;
-      color: white;
-      cursor: pointer;
+      background-color: #2196F3;
     }
 
     .filter-buttons button:hover {
-      background-color: #45a049;
+      background-color: #1976D2;
+    }
+
+    .event-button.red {
+      background-color: red;
+    }
+
+    .event-button.yellow {
+      background-color: #FFC107;
     }
 
     .event-details {
-      margin-top: 20px;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 10px;
+      display: none;
+      margin: 20px auto;
+      width: 80%;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 15px;
       border-radius: 5px;
+      text-align: left;
+    }
+
+    .event-details img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .back-button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #f44336;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      display: block;
+      width: fit-content;
+    }
+
+    .back-button:hover {
+      background-color: #d32f2f;
     }
   </style>
 </head>
@@ -63,26 +94,27 @@
 
   <div class="filter-buttons"></div>
   <div class="event-list"></div>
-  <div class="event-details" style="display: none;"></div>
+  <div class="event-details"></div>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/0wwv7l0dnhiwr';
+    let eventData = [];
 
     function getDataFromApi() {
       axios.get(apiURL)
         .then(response => {
-          const data = response.data;
-          generateFilterButtons(data);
+          eventData = response.data;
+          generateFilterButtons(eventData);
         })
         .catch(error => {
           console.error('Error al obtener datos:', error);
+          document.querySelector('.filter-buttons').innerHTML = '<p>Error al cargar eventos.</p>';
         });
     }
 
     function generateFilterButtons(data) {
-      // Obtener y ordenar departamentos alfabéticamente
       const uniqueDepartments = [...new Set(data.map(item => item.Departamento))].sort();
       const filterButtonsContainer = document.querySelector('.filter-buttons');
       filterButtonsContainer.innerHTML = '';
@@ -98,50 +130,39 @@
     }
 
     function filterEventsByDepartment(department) {
-      axios.get(apiURL)
-        .then(response => {
-          const data = response.data;
-          const filteredEvents = data.filter(row => row.Departamento === department);
-          displayEventButtons(filteredEvents);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
-        });
+      const filteredEvents = eventData.filter(row => row.Departamento === department);
+      displayEventButtons(filteredEvents);
     }
 
     function displayEventButtons(events) {
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
 
-      // Ordenar los eventos por Ciudad alfabéticamente, y luego por Numero
       events.sort((a, b) => {
         const cityComparison = a.Ciudad.localeCompare(b.Ciudad);
         if (cityComparison === 0) {
-          // Si las ciudades son iguales, comparar por número (conversión a número si es posible)
-          const numA = parseInt(a.Numero) || 0;
-          const numB = parseInt(b.Numero) || 0;
-          return numA - numB;
+          return (parseInt(a.Numero) || 0) - (parseInt(b.Numero) || 0);
         }
         return cityComparison;
       });
 
+      if (events.length === 0) {
+        eventList.innerHTML = '<p>No hay eventos en este departamento.</p>';
+        return;
+      }
+
       events.forEach(row => {
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        
-        const numero = row.Numero !== undefined ? row.Numero : 'N/A';
-        eventButton.textContent = `${row.Ciudad} - ${numero}`;
+        eventButton.textContent = `${row.Ciudad} - ${row.Numero || 'N/A'}`;
 
-        // Verificar si TODOS los campos Telescopio, Accesorios, Horario y Descripción están vacíos
         const areAllFieldsEmpty = !row.Telescopio && !row.Accesorios && !row.Horario && !row.Descripción;
-
-        // Verificar si el campo Atención NO está vacío
         const isAtencionNotEmpty = row.Atención && row.Atención.trim() !== '';
 
         if (areAllFieldsEmpty) {
-          eventButton.style.backgroundColor = 'red'; // Cambiar el color del botón a rojo si todos los campos están vacíos
+          eventButton.classList.add('red');
         } else if (isAtencionNotEmpty) {
-          eventButton.style.backgroundColor = '#FFC107'; // Cambiar el color del botón a amarillo oscuro si Atención no está vacío
+          eventButton.classList.add('yellow');
         }
 
         eventButton.onclick = function() {
@@ -154,24 +175,26 @@
     function displayEventDetails(event) {
       const eventDetailsContainer = document.querySelector('.event-details');
       eventDetailsContainer.style.display = 'block';
-      
       const numero = event.Numero !== undefined ? event.Numero : 'N/A';
       
       eventDetailsContainer.innerHTML = `
-        <p class="event-name">${event.Ciudad}</p>
-        <p>Número: ${numero}</p>
-        <p>Docentes: ${event.Docentes}</p>
-        <p>Telescopio: ${event.Telescopio}</p>
-        <p>Accesorios: ${event.Accesorios}</p>
-        <p>Horario: ${event.Horario}</p>
-        <p>Descripción: ${event.Descripción}</p>
-        ${event.Fotos ? `<img class="event-image" src="${event.Fotos}" alt="${event.Ciudad}">` : ''}
+        <p><strong>${event.Ciudad}</strong></p>
+        <p><strong>Número:</strong> ${numero}</p>
+        <p><strong>Docentes:</strong> ${event.Docentes || 'No disponible'}</p>
+        <p><strong>Telescopio:</strong> ${event.Telescopio || 'No disponible'}</p>
+        <p><strong>Accesorios:</strong> ${event.Accesorios || 'No disponible'}</p>
+        <p><strong>Horario:</strong> ${event.Horario || 'No disponible'}</p>
+        <p><strong>Descripción:</strong> ${event.Descripción || 'No disponible'}</p>
+        ${event.Fotos ? `<img src="${event.Fotos}" alt="${event.Ciudad}">` : ''}
+        <button class="back-button" onclick="hideEventDetails()">Volver</button>
       `;
     }
 
-    window.onload = function() {
-      getDataFromApi();
-    };
+    function hideEventDetails() {
+      document.querySelector('.event-details').style.display = 'none';
+    }
+
+    window.onload = getDataFromApi;
   </script>
 </body>
 </html>
