@@ -17,10 +17,6 @@
       margin-top: 20px;
     }
 
-    .event-list div {
-      margin-bottom: 10px;
-    }
-
     .event-button, .filter-buttons button {
       margin: 5px;
       padding: 10px 16px;
@@ -46,6 +42,14 @@
 
     .filter-buttons button:hover {
       background-color: #1976D2;
+    }
+
+    .event-button.red {
+      background-color: red;
+    }
+
+    .event-button.yellow {
+      background-color: #FFC107;
     }
 
     .event-details {
@@ -88,6 +92,7 @@
   <div class="event-list"></div>
   <div class="event-details"></div>
 
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
     const apiURL = 'https://sheetdb.io/api/v1/0wwv7l0dnhiwr';
@@ -122,64 +127,58 @@
 
     function filterEventsByDepartment(department) {
       const filteredEvents = eventData.filter(row => row.Departamento === department);
-      const uniqueEvents = getMostRecentEvents(filteredEvents);
-      displayEventButtons(uniqueEvents);
+      const groupedEvents = groupEventsByMostRecent(filteredEvents);
+      displayEventButtons(groupedEvents);
     }
 
-    function getMostRecentEvents(events) {
+    function groupEventsByMostRecent(events) {
       const eventMap = new Map();
 
       events.forEach(event => {
         const key = `${event.Departamento}-${event.Ciudad}-${event.Numero}`;
-        const eventDate = parseDate(event["Marca temporal"]);
+        const existingEvents = eventMap.get(key) || [];
 
-        if (!eventMap.has(key)) {
-          eventMap.set(key, []);
-        }
+        let eventDate = parseDate(event["Marca temporal"]);
+        existingEvents.push({ ...event, eventDate });
 
-        eventMap.get(key).push({ ...event, eventDate });
+        eventMap.set(key, existingEvents);
       });
 
-      eventMap.forEach(eventList => {
-        eventList.sort((a, b) => {
-          if (a.eventDate === null && b.eventDate !== null) return 1;
-          if (a.eventDate !== null && b.eventDate === null) return -1;
-          return (b.eventDate || 0) - (a.eventDate || 0);
-        });
-
-        const hasNoDate = eventList.some(e => e.eventDate === null);
-        if (hasNoDate) {
-          const filteredEvents = eventList.filter(e => e.eventDate !== null);
-          const firstNoDateEvent = eventList.find(e => e.eventDate === null);
-          if (firstNoDateEvent) filteredEvents.push(firstNoDateEvent);
-          eventMap.set(eventList[0].key, filteredEvents);
-        }
+      return Array.from(eventMap.values()).map(eventList => {
+        eventList.sort((a, b) => (b.eventDate || 0) - (a.eventDate || 0));
+        return eventList;
       });
-
-      return eventMap;
     }
 
-    function parseDate(dateString) {
-      if (!dateString || dateString.trim() === '') return null;
-      const formattedDate = dateString.replace(/(\d+)\/(\d+)\/(\d+) (\d+:\d+:\d+)/, '$2/$1/$3 $4');
-      const parsedDate = new Date(formattedDate);
-      return isNaN(parsedDate) ? null : parsedDate;
+    function parseDate(dateStr) {
+      if (!dateStr || dateStr.trim() === '') return null;
+      return new Date(dateStr.replace(/(\d+)\/(\d+)\/(\d+) (\d+:\d+:\d+)/, '$2/$1/$3 $4'));
     }
 
-    function displayEventButtons(eventsMap) {
+    function displayEventButtons(eventGroups) {
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
 
-      eventsMap.forEach((eventVersions) => {
-        const mostRecentEvent = eventVersions[0];
+      if (eventGroups.length === 0) {
+        eventList.innerHTML = '<p>No hay eventos en este departamento.</p>';
+        return;
+      }
+
+      eventGroups.forEach(events => {
+        const latestEvent = events[0];
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        eventButton.textContent = `${mostRecentEvent.Ciudad} - ${mostRecentEvent.Numero || 'N/A'}`;
+        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero || 'N/A'}`;
+
+        if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent.Descripción) {
+          eventButton.style.backgroundColor = 'red';
+        } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
+          eventButton.style.backgroundColor = '#FFC107';
+        }
 
         eventButton.onclick = function() {
-          displayEventDetails(eventVersions);
+          displayEventDetails(events);
         };
-
         eventList.appendChild(eventButton);
       });
     }
@@ -187,26 +186,25 @@
     function displayEventDetails(eventVersions) {
       const eventDetailsContainer = document.querySelector('.event-details');
       eventDetailsContainer.style.display = 'block';
-      const mostRecentEvent = eventVersions[0];
+
+      const latestEvent = eventVersions[0];
 
       let detailsHTML = `
-        <p><strong>${mostRecentEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${mostRecentEvent.Numero || 'N/A'}</p>
-        <p><strong>Fecha:</strong> ${mostRecentEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
-        <p><strong>Docentes:</strong> ${mostRecentEvent.Docentes || 'No disponible'}</p>
-        <p><strong>Telescopio:</strong> ${mostRecentEvent.Telescopio || 'No disponible'}</p>
-        <p><strong>Accesorios:</strong> ${mostRecentEvent.Accesorios || 'No disponible'}</p>
-        <p><strong>Horario:</strong> ${mostRecentEvent.Horario || 'No disponible'}</p>
-        <p><strong>Descripción:</strong> ${mostRecentEvent.Descripción || 'No disponible'}</p>
-        ${mostRecentEvent.Fotos ? `<img src="${mostRecentEvent.Fotos}" alt="${mostRecentEvent.Ciudad}">` : ''}
-        <button class="back-button" onclick="hideEventDetails()">Volver</button>
+        <p><strong>${latestEvent.Ciudad}</strong></p>
+        <p><strong>Número:</strong> ${latestEvent.Numero || 'N/A'}</p>
+        <p><strong>Fecha:</strong> ${latestEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
+        <p><strong>Docentes:</strong> ${latestEvent.Docentes || 'No disponible'}</p>
+        <p><strong>Telescopio:</strong> ${latestEvent.Telescopio || 'No disponible'}</p>
+        <p><strong>Accesorios:</strong> ${latestEvent.Accesorios || 'No disponible'}</p>
+        <p><strong>Horario:</strong> ${latestEvent.Horario || 'No disponible'}</p>
+        <p><strong>Descripción:</strong> ${latestEvent.Descripción || 'No disponible'}</p>
       `;
 
       if (eventVersions.length > 1) {
         detailsHTML += `<h3>Versiones anteriores:</h3><ul>`;
         eventVersions.slice(1).forEach(event => {
           detailsHTML += `<li>
-            <button onclick="displayEventDetails([event])">
+            <button onclick='displayEventDetailsSingle(${JSON.stringify(event)})'>
               ${event["Marca temporal"] || 'Sin fecha'}
             </button>
           </li>`;
@@ -214,7 +212,12 @@
         detailsHTML += `</ul>`;
       }
 
+      detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
+    }
+
+    function displayEventDetailsSingle(event) {
+      displayEventDetails([event]);
     }
 
     function hideEventDetails() {
