@@ -177,34 +177,32 @@
         }
 
         eventButton.onclick = function() {
-          displayEventDetails(events);
+          displayEventDetails(events, latestEvent);
         };
         eventList.appendChild(eventButton);
       });
     }
 
-    function displayEventDetails(eventVersions) {
+    function displayEventDetails(eventVersions, selectedEvent) {
       const eventDetailsContainer = document.querySelector('.event-details');
       eventDetailsContainer.style.display = 'block';
 
-      const latestEvent = eventVersions[0];
-
       let detailsHTML = `
-        <p><strong>${latestEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${latestEvent.Numero || 'N/A'}</p>
-        <p><strong>Fecha:</strong> ${latestEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
-        <p><strong>Docentes:</strong> ${latestEvent.Docentes || 'No disponible'}</p>
-        <p><strong>Telescopio:</strong> ${latestEvent.Telescopio || 'No disponible'}</p>
-        <p><strong>Accesorios:</strong> ${latestEvent.Accesorios || 'No disponible'}</p>
-        <p><strong>Horario:</strong> ${latestEvent.Horario || 'No disponible'}</p>
-        <p><strong>Descripción:</strong> ${latestEvent.Descripción || 'No disponible'}</p>
+        <p><strong>${selectedEvent.Ciudad}</strong></p>
+        <p><strong>Número:</strong> ${selectedEvent.Numero || 'N/A'}</p>
+        <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
+        <p><strong>Docentes:</strong> ${selectedEvent.Docentes || 'No disponible'}</p>
+        <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
+        <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
+        <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
+        <p><strong>Descripción:</strong> ${selectedEvent.Descripción || 'No disponible'}</p>
       `;
 
       if (eventVersions.length > 1) {
         detailsHTML += `<h3>Versiones anteriores:</h3><ul>`;
         eventVersions.slice(1).forEach(event => {
           detailsHTML += `<li>
-            <button onclick='displayEventDetailsSingle(${JSON.stringify(event)})'>
+            <button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
               ${event["Marca temporal"] || 'Sin fecha'}
             </button>
           </li>`;
@@ -214,10 +212,6 @@
 
       detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
-    }
-
-    function displayEventDetailsSingle(event) {
-      displayEventDetails([event]);
     }
 
     function hideEventDetails() {
