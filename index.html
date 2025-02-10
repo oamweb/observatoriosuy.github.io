@@ -198,9 +198,9 @@
         <p><strong>Descripción:</strong> ${selectedEvent.Descripción || 'No disponible'}</p>
       `;
 
-      if (eventVersions.length > 1) {
-        detailsHTML += `<h3>Versiones anteriores:</h3><ul>`;
-        eventVersions.slice(1).forEach(event => {
+      if (eventVersions.length > 0) {
+        detailsHTML += `<h3>Versiones:</h3><ul>`;
+        eventVersions.forEach(event => {
           detailsHTML += `<li>
             <button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
               ${event["Marca temporal"] || 'Sin fecha'}
