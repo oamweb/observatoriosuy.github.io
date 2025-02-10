@@ -48,10 +48,6 @@
       background-color: #1976D2;
     }
 
-    .event-button.yellow {
-      background-color: #FFC107;
-    }
-
     .event-details {
       display: none;
       margin: 20px auto;
@@ -174,7 +170,7 @@
       const eventList = document.querySelector('.event-list');
       eventList.innerHTML = '';
 
-      eventsMap.forEach((eventVersions, key) => {
+      eventsMap.forEach((eventVersions) => {
         const mostRecentEvent = eventVersions[0];
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
@@ -185,16 +181,6 @@
         };
 
         eventList.appendChild(eventButton);
-
-        if (eventVersions.length > 1) {
-          const historyButton = document.createElement('button');
-          historyButton.textContent = 'Ver versiones anteriores';
-          historyButton.classList.add('event-button', 'yellow');
-          historyButton.onclick = function() {
-            showPreviousVersions(eventVersions);
-          };
-          eventList.appendChild(historyButton);
-        }
       });
     }
 
