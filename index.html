@@ -1,128 +1,200 @@
-<script>
-  const apiURL = 'https://sheetdb.io/api/v1/0wwv7l0dnhiwr';
-  let eventData = [];
-
-  function getDataFromApi() {
-    axios.get(apiURL)
-      .then(response => {
-        eventData = response.data;
-        generateFilterButtons(eventData);
-      })
-      .catch(error => {
-        console.error('Error al obtener datos:', error);
-        document.querySelector('.filter-buttons').innerHTML = '<p>Error al cargar eventos.</p>';
-      });
-  }
-
-  function generateFilterButtons(data) {
-    const uniqueDepartments = [...new Set(data.map(item => item.Departamento))].sort();
-    const filterButtonsContainer = document.querySelector('.filter-buttons');
-    filterButtonsContainer.innerHTML = '';
-
-    uniqueDepartments.forEach(department => {
-      const button = document.createElement('button');
-      button.textContent = department;
-      button.onclick = function() {
-        filterEventsByDepartment(department);
-      };
-      filterButtonsContainer.appendChild(button);
-    });
-  }
-
-  function filterEventsByDepartment(department) {
-    const filteredEvents = eventData.filter(row => row.Departamento === department);
-    const uniqueEvents = getMostRecentEvents(filteredEvents);
-    displayEventButtons(uniqueEvents);
-  }
-
-  function getMostRecentEvents(events) {
-    const eventMap = new Map();
-
-    events.forEach(event => {
-      const key = `${event.Departamento}-${event.Ciudad}-${event.Numero}`;
-      const existingEvent = eventMap.get(key);
-      
-      // Validar si "Marca temporal" tiene un valor
-      let eventDate = null;
-      if (event["Marca temporal"] && event["Marca temporal"].trim() !== '') {
-        const formattedDate = event["Marca temporal"].replace(/(\d+)\/(\d+)\/(\d+) (\d+:\d+:\d+)/, '$2/$1/$3 $4');
-        eventDate = new Date(formattedDate);
-      }
-
-      let existingDate = null;
-      if (existingEvent && existingEvent["Marca temporal"] && existingEvent["Marca temporal"].trim() !== '') {
-        const formattedDate = existingEvent["Marca temporal"].replace(/(\d+)\/(\d+)\/(\d+) (\d+:\d+:\d+)/, '$2/$1/$3 $4');
-        existingDate = new Date(formattedDate);
-      }
-
-      // Si no hay evento previo o el nuevo es más reciente, actualizar el mapa
-      if (!existingEvent || (eventDate && (!existingDate || eventDate > existingDate))) {
-        eventMap.set(key, event);
-      }
-    });
-
-    return Array.from(eventMap.values());
-  }
-
-  function displayEventButtons(events) {
-    const eventList = document.querySelector('.event-list');
-    eventList.innerHTML = '';
-
-    events.sort((a, b) => {
-      const cityComparison = a.Ciudad.localeCompare(b.Ciudad);
-      if (cityComparison === 0) {
-        return (parseInt(a.Numero) || 0) - (parseInt(b.Numero) || 0);
-      }
-      return cityComparison;
-    });
-
-    if (events.length === 0) {
-      eventList.innerHTML = '<p>No hay eventos en este departamento.</p>';
-      return;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eventos próximos</title>
+  <style>
+    body {
+      background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      font-family: Arial, sans-serif;
     }
 
-    events.forEach(row => {
-      const eventButton = document.createElement('button');
-      eventButton.classList.add('event-button');
-      eventButton.textContent = `${row.Ciudad} - ${row.Numero || 'N/A'}`;
+    .event-list, .filter-buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
 
-      const areAllFieldsEmpty = !row.Telescopio && !row.Accesorios && !row.Horario && !row.Descripción;
-      const isAtencionNotEmpty = row.Atención && row.Atención.trim() !== '';
+    .event-list div {
+      margin-bottom: 10px;
+    }
 
-      if (areAllFieldsEmpty) {
-        eventButton.style.backgroundColor = 'red';
-      } else if (isAtencionNotEmpty) {
-        eventButton.style.backgroundColor = '#FFC107';
+    .event-button, .filter-buttons button {
+      margin: 5px;
+      padding: 10px 16px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .event-button {
+      background-color: #4CAF50;
+    }
+
+    .event-button:hover {
+      background-color: #45a049;
+    }
+
+    .filter-buttons button {
+      background-color: #2196F3;
+    }
+
+    .filter-buttons button:hover {
+      background-color: #1976D2;
+    }
+
+    .event-button.red {
+      background-color: red;
+    }
+
+    .event-button.yellow {
+      background-color: #FFC107;
+    }
+
+    .event-details {
+      display: none;
+      margin: 20px auto;
+      width: 80%;
+      background-color: rgba(0, 0, 0, 0.8);
+      padding: 15px;
+      border-radius: 5px;
+      text-align: left;
+    }
+
+    .event-details img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .back-button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background-color: #f44336;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+      display: block;
+      width: fit-content;
+    }
+
+    .back-button:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="filter-buttons"></div>
+  <div class="event-list"></div>
+  <div class="event-details"></div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const apiURL = 'https://sheetdb.io/api/v1/0wwv7l0dnhiwr';
+    let eventData = [];
+
+    function getDataFromApi() {
+      axios.get(apiURL)
+        .then(response => {
+          eventData = response.data;
+          generateFilterButtons(eventData);
+        })
+        .catch(error => {
+          console.error('Error al obtener datos:', error);
+          document.querySelector('.filter-buttons').innerHTML = '<p>Error al cargar eventos.</p>';
+        });
+    }
+
+    function generateFilterButtons(data) {
+      const uniqueDepartments = [...new Set(data.map(item => item.Departamento))].sort();
+      const filterButtonsContainer = document.querySelector('.filter-buttons');
+      filterButtonsContainer.innerHTML = '';
+
+      uniqueDepartments.forEach(department => {
+        const button = document.createElement('button');
+        button.textContent = department;
+        button.onclick = function() {
+          filterEventsByDepartment(department);
+        };
+        filterButtonsContainer.appendChild(button);
+      });
+    }
+
+    function filterEventsByDepartment(department) {
+      const filteredEvents = eventData.filter(row => row.Departamento === department);
+      displayEventButtons(filteredEvents);
+    }
+
+    function displayEventButtons(events) {
+      const eventList = document.querySelector('.event-list');
+      eventList.innerHTML = '';
+
+      events.sort((a, b) => {
+        const cityComparison = a.Ciudad.localeCompare(b.Ciudad);
+        if (cityComparison === 0) {
+          return (parseInt(a.Numero) || 0) - (parseInt(b.Numero) || 0);
+        }
+        return cityComparison;
+      });
+
+      if (events.length === 0) {
+        eventList.innerHTML = '<p>No hay eventos en este departamento.</p>';
+        return;
       }
 
-      eventButton.onclick = function() {
-        displayEventDetails(row);
-      };
-      eventList.appendChild(eventButton);
-    });
-  }
+      events.forEach(row => {
+        const eventButton = document.createElement('button');
+        eventButton.classList.add('event-button');
+        eventButton.textContent = `${row.Ciudad} - ${row.Numero || 'N/A'}`;
 
-  function displayEventDetails(event) {
-    const eventDetailsContainer = document.querySelector('.event-details');
-    eventDetailsContainer.style.display = 'block';
-    const numero = event.Numero !== undefined ? event.Numero : 'N/A';
-    
-    eventDetailsContainer.innerHTML = `
-      <p><strong>${event.Ciudad}</strong></p>
-      <p><strong>Número:</strong> ${numero}</p>
-      <p><strong>Docentes:</strong> ${event.Docentes || 'No disponible'}</p>
-      <p><strong>Telescopio:</strong> ${event.Telescopio || 'No disponible'}</p>
-      <p><strong>Accesorios:</strong> ${event.Accesorios || 'No disponible'}</p>
-      <p><strong>Horario:</strong> ${event.Horario || 'No disponible'}</p>
-      <p><strong>Descripción:</strong> ${event.Descripción || 'No disponible'}</p>
-      ${event.Fotos ? `<img src="${event.Fotos}" alt="${event.Ciudad}">` : ''}
-      <button class="back-button" onclick="hideEventDetails()">Volver</button>
-    `;
-  }
+        const areAllFieldsEmpty = !row.Telescopio && !row.Accesorios && !row.Horario && !row.Descripción;
+        const isAtencionNotEmpty = row.Atención && row.Atención.trim() !== '';
 
-  function hideEventDetails() {
-    document.querySelector('.event-details').style.display = 'none';
-  }
+        if (areAllFieldsEmpty) {
+          eventButton.classList.add('red');
+        } else if (isAtencionNotEmpty) {
+          eventButton.classList.add('yellow');
+        }
 
-  window.onload = getDataFromApi;
-</script>
+        eventButton.onclick = function() {
+          displayEventDetails(row);
+        };
+        eventList.appendChild(eventButton);
+      });
+    }
+
+    function displayEventDetails(event) {
+      const eventDetailsContainer = document.querySelector('.event-details');
+      eventDetailsContainer.style.display = 'block';
+      const numero = event.Numero !== undefined ? event.Numero : 'N/A';
+      
+      eventDetailsContainer.innerHTML = `
+        <p><strong>${event.Ciudad}</strong></p>
+        <p><strong>Número:</strong> ${numero}</p>
+        <p><strong>Docentes:</strong> ${event.Docentes || 'No disponible'}</p>
+        <p><strong>Telescopio:</strong> ${event.Telescopio || 'No disponible'}</p>
+        <p><strong>Accesorios:</strong> ${event.Accesorios || 'No disponible'}</p>
+        <p><strong>Horario:</strong> ${event.Horario || 'No disponible'}</p>
+        <p><strong>Descripción:</strong> ${event.Descripción || 'No disponible'}</p>
+        ${event.Fotos ? `<img src="${event.Fotos}" alt="${event.Ciudad}">` : ''}
+        <button class="back-button" onclick="hideEventDetails()">Volver</button>
+      `;
+    }
+
+    function hideEventDetails() {
+      document.querySelector('.event-details').style.display = 'none';
+    }
+
+    window.onload = getDataFromApi;
+  </script>
+</body>
+</html>
