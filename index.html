@@ -144,7 +144,7 @@
         const existingEvents = eventMap.get(key) || [];
 
         let eventDate = parseDate(event["Marca temporal"]);
-        existingEvents.push({ ...event, eventDate });
+        existingEvents.push({ ...event, eventDate, Numero: eventNumber });
 
         eventMap.set(key, existingEvents);
       });
@@ -175,7 +175,7 @@
         const latestEvent = events[0];
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero || 'N/A'}`;
+        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero}`;
 
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent.Descripción) {
           eventButton.classList.add('red');
@@ -198,7 +198,7 @@
 
       let detailsHTML = `
         <p><strong>${selectedEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${selectedEvent.Numero || 'N/A'}</p>
+        <p><strong>Número:</strong> ${selectedEvent.Numero}</p>
         <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
         <p><strong>Docentes:</strong> ${selectedEvent.Docentes || 'No disponible'}</p>
         <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
