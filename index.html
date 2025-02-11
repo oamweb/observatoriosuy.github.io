@@ -52,10 +52,6 @@
       background-color: #FFC107;
     }
 
-    .event-button.blue {
-      background-color: blue;
-    }
-
     .event-details {
       display: none;
       margin: 20px auto;
@@ -168,8 +164,6 @@
         return;
       }
 
-      const currentYear = new Date().getFullYear();
-
       eventGroups.forEach(events => {
         const latestEvent = events[0];
         const eventButton = document.createElement('button');
@@ -177,11 +171,9 @@
         eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero || 'N/A'}`;
 
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent.Descripción) {
-          eventButton.classList.add('red');
+          eventButton.style.backgroundColor = 'red';
         } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
-          eventButton.classList.add('yellow');
-        } else if (latestEvent.eventDate && latestEvent.eventDate.getFullYear() === currentYear) {
-          eventButton.classList.add('blue');
+          eventButton.style.backgroundColor = '#FFC107';
         }
 
         eventButton.onclick = function() {
