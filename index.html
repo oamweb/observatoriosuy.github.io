@@ -66,6 +66,13 @@
       text-align: left;
     }
 
+    .event-details img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
     .back-button {
       margin-top: 10px;
       padding: 8px 16px;
@@ -132,12 +139,11 @@
       const eventMap = new Map();
 
       events.forEach(event => {
-        const eventNumber = event.Numero && event.Numero.trim() !== '' ? event.Numero : '1';
-        const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
+        const key = `${event.Departamento}-${event.Ciudad}-${event.Numero}`;
         const existingEvents = eventMap.get(key) || [];
 
         let eventDate = parseDate(event["Marca temporal"]);
-        existingEvents.push({ ...event, eventDate, Numero: eventNumber });
+        existingEvents.push({ ...event, eventDate });
 
         eventMap.set(key, existingEvents);
       });
@@ -168,7 +174,7 @@
         const latestEvent = events[0];
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero}`;
+        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero || 'N/A'}`;
 
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent.Descripción) {
           eventButton.classList.add('red');
@@ -191,7 +197,7 @@
 
       let detailsHTML = `
         <p><strong>${selectedEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${selectedEvent.Numero}</p>
+        <p><strong>Número:</strong> ${selectedEvent.Numero || 'N/A'}</p>
         <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
         <p><strong>Docentes:</strong> ${selectedEvent.Docentes || 'No disponible'}</p>
         <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
