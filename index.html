@@ -139,7 +139,8 @@
       const eventMap = new Map();
 
       events.forEach(event => {
-        const key = `${event.Departamento}-${event.Ciudad}-${event.Numero}`;
+        const eventNumber = event.Numero && event.Numero.trim() !== '' ? event.Numero : '1';
+        const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
         const existingEvents = eventMap.get(key) || [];
 
         let eventDate = parseDate(event["Marca temporal"]);
