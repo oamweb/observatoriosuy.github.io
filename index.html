@@ -139,7 +139,7 @@
       const eventMap = new Map();
 
       events.forEach(event => {
-        const eventNumber = event.Numero && event.Numero.trim() !== '' ? event.Numero : '1';
+        const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : 'Desconocido';
         const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
         const existingEvents = eventMap.get(key) || [];
 
@@ -175,9 +175,9 @@
         const latestEvent = events[0];
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent.Numero}`;
+        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]}`;
 
-        if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent.Descripción) {
+        if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
           eventButton.classList.add('red');
         } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
           eventButton.classList.add('yellow');
@@ -198,13 +198,13 @@
 
       let detailsHTML = `
         <p><strong>${selectedEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${selectedEvent.Numero}</p>
+        <p><strong>Número:</strong> ${selectedEvent["Número de liceo"]}</p>
         <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
-        <p><strong>Docentes:</strong> ${selectedEvent.Docentes || 'No disponible'}</p>
+        <p><strong>Docentes:</strong> ${selectedEvent["Docentes y contacto"] || 'No disponible'}</p>
         <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
         <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
         <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
-        <p><strong>Descripción:</strong> ${selectedEvent.Descripción || 'No disponible'}</p>
+        <p><strong>Descripción:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
       `;
 
       if (eventVersions.length > 0) {
