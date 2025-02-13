@@ -132,7 +132,7 @@
       const eventMap = new Map();
 
       events.forEach(event => {
-        const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : 'Desconocido';
+        const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : '0';
         const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
         const existingEvents = eventMap.get(key) || [];
 
@@ -162,13 +162,14 @@
         return;
       }
 
-      const currentYear = new Date().getFullYear();
-
-      // Ordenar eventos por ciudad y luego por Número de liceo
       eventGroups.sort((a, b) => {
         if (a[0].Ciudad < b[0].Ciudad) return -1;
         if (a[0].Ciudad > b[0].Ciudad) return 1;
-        return a[0]["Número de liceo"].localeCompare(b[0]["Número de liceo"]);
+
+        const numA = parseInt(a[0]["Número de liceo"], 10) || 0;
+        const numB = parseInt(b[0]["Número de liceo"], 10) || 0;
+
+        return numA - numB;
       });
 
       eventGroups.forEach(events => {
@@ -176,14 +177,6 @@
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
         eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]}`;
-
-        if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
-          eventButton.classList.add('red');
-        } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
-          eventButton.classList.add('yellow');
-        } else if (latestEvent.eventDate && latestEvent.eventDate.getFullYear() === currentYear) {
-          eventButton.classList.add('blue');
-        }
 
         eventButton.onclick = function() {
           displayEventDetails(events, latestEvent);
@@ -205,9 +198,17 @@
         <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
         <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
         <p><strong>Descripción:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
+        <h3>Versiones anteriores:</h3>
+        <ul>
       `;
 
-      detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
+      eventVersions.forEach(event => {
+        detailsHTML += `<li><button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
+          ${event["Marca temporal"] || 'Sin fecha'}
+        </button></li>`;
+      });
+
+      detailsHTML += `</ul><button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
     }
 
