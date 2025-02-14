@@ -66,13 +66,6 @@
       text-align: left;
     }
 
-    .event-details img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-
     .back-button {
       margin-top: 10px;
       padding: 8px 16px;
@@ -140,7 +133,7 @@
 
       events.forEach(event => {
         const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : 'Desconocido';
-        const key = ${event.Departamento}-${event.Ciudad}-${eventNumber};
+        const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
         const existingEvents = eventMap.get(key) || [];
 
         let eventDate = parseDate(event["Marca temporal"]);
@@ -171,11 +164,18 @@
 
       const currentYear = new Date().getFullYear();
 
+      // Ordenar eventos por ciudad y luego por Número de liceo
+      eventGroups.sort((a, b) => {
+        if (a[0].Ciudad < b[0].Ciudad) return -1;
+        if (a[0].Ciudad > b[0].Ciudad) return 1;
+        return a[0]["Número de liceo"].localeCompare(b[0]["Número de liceo"]);
+      });
+
       eventGroups.forEach(events => {
         const latestEvent = events[0];
         const eventButton = document.createElement('button');
         eventButton.classList.add('event-button');
-        eventButton.textContent = ${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]};
+        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]}`;
 
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
           eventButton.classList.add('red');
@@ -196,7 +196,7 @@
       const eventDetailsContainer = document.querySelector('.event-details');
       eventDetailsContainer.style.display = 'block';
 
-      let detailsHTML = 
+      let detailsHTML = `
         <p><strong>${selectedEvent.Ciudad}</strong></p>
         <p><strong>Número:</strong> ${selectedEvent["Número de liceo"]}</p>
         <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
@@ -205,21 +205,9 @@
         <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
         <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
         <p><strong>Descripción:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
-      ;
+      `;
 
-      if (eventVersions.length > 0) {
-        detailsHTML += <h3>Versiones:</h3><ul>;
-        eventVersions.forEach(event => {
-          detailsHTML += <li>
-            <button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
-              ${event["Marca temporal"] || 'Sin fecha'}
-            </button>
-          </li>;
-        });
-        detailsHTML += </ul>;
-      }
-
-      detailsHTML += <button class="back-button" onclick="hideEventDetails()">Volver</button>;
+      detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
     }
 
