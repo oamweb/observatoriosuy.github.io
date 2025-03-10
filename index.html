@@ -32,7 +32,7 @@
     .event-button:hover { background-color: #45a049; }
     .filter-buttons button { background-color: #2196F3; }
     .filter-buttons button:hover { background-color: #1976D2; }
-    
+
     .event-button.red { background-color: red; }
     .event-button.yellow { background-color: #FFC107; }
     .event-button.blue { background-color: blue; }
@@ -141,6 +141,7 @@
         return;
       }
 
+      // ORDENAR POR CIUDAD Y NÚMERO DE LICEO
       eventGroups.sort((a, b) => {
         if (a[0].Ciudad < b[0].Ciudad) return -1;
         if (a[0].Ciudad > b[0].Ciudad) return 1;
@@ -186,16 +187,9 @@
         <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
         <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
         <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
-        <p><strong>Otros:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
+        <p><strong>Biblioteca:</strong> ${selectedEvent.Biblioteca || 'No disponible'}</p>
+        <p><strong>Enlace a bitácora:</strong> <a href="${selectedEvent["Enlace a bitácora"]}" target="_blank">Ver</a></p>
       `;
-
-      detailsHTML += `<h3>Versiones:</h3><ul>`;
-      eventVersions.forEach(event => {
-        detailsHTML += `<li><button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
-          ${event["Marca temporal"] || 'Sin fecha'}
-        </button></li>`;
-      });
-      detailsHTML += `</ul>`;
 
       detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
