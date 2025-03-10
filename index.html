@@ -32,7 +32,7 @@
     .event-button:hover { background-color: #45a049; }
     .filter-buttons button { background-color: #2196F3; }
     .filter-buttons button:hover { background-color: #1976D2; }
-
+    
     .event-button.red { background-color: red; }
     .event-button.yellow { background-color: #FFC107; }
     .event-button.blue { background-color: blue; }
@@ -111,7 +111,7 @@
       const eventMap = new Map();
 
       events.forEach(event => {
-        const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : 'Desconocido';
+        const eventNumber = event["Número de liceo"]?.trim() || 'Desconocido';
         const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
         const existingEvents = eventMap.get(key) || [];
 
@@ -141,7 +141,6 @@
         return;
       }
 
-      // ORDENAR POR CIUDAD Y NÚMERO DE LICEO
       eventGroups.sort((a, b) => {
         if (a[0].Ciudad < b[0].Ciudad) return -1;
         if (a[0].Ciudad > b[0].Ciudad) return 1;
@@ -160,6 +159,7 @@
         eventButton.classList.add('event-button');
         eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]}`;
 
+        // Aplicación de colores
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
           eventButton.classList.add('red');
         } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
@@ -187,11 +187,12 @@
         <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
         <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
         <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
+        <p><strong>Otros:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
         <p><strong>Biblioteca:</strong> ${selectedEvent.Biblioteca || 'No disponible'}</p>
         <p><strong>Enlace a bitácora:</strong> <a href="${selectedEvent["Enlace a bitácora"]}" target="_blank">Ver</a></p>
+        <button class="back-button" onclick="hideEventDetails()">Volver</button>
       `;
 
-      detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
     }
 
