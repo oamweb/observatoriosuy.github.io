@@ -111,7 +111,7 @@
       const eventMap = new Map();
 
       events.forEach(event => {
-        const eventNumber = event["Número de liceo"]?.trim() || 'Desconocido';
+        const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : 'Desconocido';
         const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
         const existingEvents = eventMap.get(key) || [];
 
@@ -159,7 +159,6 @@
         eventButton.classList.add('event-button');
         eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]}`;
 
-        // Aplicación de colores
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
           eventButton.classList.add('red');
         } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
@@ -188,11 +187,20 @@
         <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
         <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
         <p><strong>Otros:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
-        <p><strong>Biblioteca:</strong> ${selectedEvent.Biblioteca || 'No disponible'}</p>
-        <p><strong>Enlace a bitácora:</strong> <a href="${selectedEvent["Enlace a bitácora"]}" target="_blank">Ver</a></p>
-        <button class="back-button" onclick="hideEventDetails()">Volver</button>
+        <p><strong>Biblioteca:</strong> ${selectedEvent["Biblioteca"] || 'No disponible'}</p>
+        <p><strong>Dirección de correo electrónico:</strong> ${selectedEvent["Dirección de correo electrónico"] || 'No disponible'}</p>
+        <p><strong>Enlace a bitácora:</strong> ${selectedEvent["Enlace a bitácora"] || 'No disponible'}</p>
       `;
 
+      detailsHTML += `<h3>Versiones:</h3><ul>`;
+      eventVersions.forEach(event => {
+        detailsHTML += `<li><button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
+          ${event["Marca temporal"] || 'Sin fecha'}
+        </button></li>`;
+      });
+      detailsHTML += `</ul>`;
+
+      detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
     }
 
