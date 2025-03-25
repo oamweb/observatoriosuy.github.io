@@ -32,9 +32,8 @@
     .event-button:hover { background-color: #45a049; }
     .filter-buttons button { background-color: #2196F3; }
     .filter-buttons button:hover { background-color: #1976D2; }
-    
+
     .event-button.red { background-color: red; }
-    .event-button.yellow { background-color: #FFC107; }
     .event-button.blue { background-color: blue; }
 
     .event-details {
@@ -141,6 +140,7 @@
         return;
       }
 
+      // Ordenar los eventos primero por ciudad y luego por número de liceo
       eventGroups.sort((a, b) => {
         if (a[0].Ciudad < b[0].Ciudad) return -1;
         if (a[0].Ciudad > b[0].Ciudad) return 1;
@@ -161,8 +161,6 @@
 
         if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
           eventButton.classList.add('red');
-        } else if (latestEvent.Atención && latestEvent.Atención.trim() !== '') {
-          eventButton.classList.add('yellow');
         } else if (latestEvent.eventDate && latestEvent.eventDate.getFullYear() === currentYear) {
           eventButton.classList.add('blue');
         }
@@ -178,27 +176,16 @@
       const eventDetailsContainer = document.querySelector('.event-details');
       eventDetailsContainer.style.display = 'block';
 
-      let detailsHTML = `
-        <p><strong>${selectedEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${selectedEvent["Número de liceo"]}</p>
-        <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
-        <p><strong>Docentes:</strong> ${selectedEvent["Docentes y contacto"] || 'No disponible'}</p>
-        <p><strong>Telescopio:</strong> ${selectedEvent.Telescopio || 'No disponible'}</p>
-        <p><strong>Accesorios:</strong> ${selectedEvent.Accesorios || 'No disponible'}</p>
-        <p><strong>Horario:</strong> ${selectedEvent.Horario || 'No disponible'}</p>
-        <p><strong>Otros:</strong> ${selectedEvent["Otros"] || 'No disponible'}</p>
-        <p><strong>Biblioteca:</strong> ${selectedEvent["Biblioteca"] || 'No disponible'}</p>
-        <p><strong>Dirección de correo electrónico:</strong> ${selectedEvent["Dirección de correo electrónico"] || 'No disponible'}</p>
-        <p><strong>Enlace a bitácora:</strong> ${selectedEvent["Enlace a bitácora"] || 'No disponible'}</p>
-      `;
+      let detailsHTML = `<p><strong>${selectedEvent.Ciudad}</strong></p>`;
+      detailsHTML += `<p><strong>Número:</strong> ${selectedEvent["Número de liceo"]}</p>`;
+      detailsHTML += `<p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>`;
 
-      detailsHTML += `<h3>Versiones:</h3><ul>`;
-      eventVersions.forEach(event => {
-        detailsHTML += `<li><button onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'>
-          ${event["Marca temporal"] || 'Sin fecha'}
-        </button></li>`;
+      // Generar dinámicamente los detalles basados en las columnas
+      Object.keys(selectedEvent).forEach(key => {
+        if (!["Marca temporal", "Departamento", "Ciudad", "Número de liceo", "eventDate"].includes(key)) {
+          detailsHTML += `<p><strong>${key}:</strong> ${selectedEvent[key] || 'No disponible'}</p>`;
+        }
       });
-      detailsHTML += `</ul>`;
 
       detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
       eventDetailsContainer.innerHTML = detailsHTML;
