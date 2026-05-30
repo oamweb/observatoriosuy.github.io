@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eventos próximos</title>
+
   <style>
     body {
       background: url('https://c0.wallpaperflare.com/preview/301/521/245/stars-at-night-time.jpg') no-repeat center center fixed;
@@ -12,12 +13,15 @@
       font-family: Arial, sans-serif;
     }
 
-    .event-list, .filter-buttons {
+    .event-list,
+    .filter-buttons {
       text-align: center;
       margin-top: 20px;
     }
 
-    .event-button, .filter-buttons button {
+    .event-button,
+    .filter-buttons button,
+    .version-button {
       margin: 5px;
       padding: 10px 16px;
       border: none;
@@ -28,26 +32,52 @@
       transition: background-color 0.3s ease;
     }
 
-    .event-button { background-color: #4CAF50; }
-    .event-button:hover { background-color: #45a049; }
-    .filter-buttons button { background-color: #2196F3; }
-    .filter-buttons button:hover { background-color: #1976D2; }
+    .event-button {
+      background-color: #4CAF50;
+    }
 
-    .event-button.red { background-color: red; }
-    .event-button.blue { background-color: blue; }
+    .event-button:hover {
+      background-color: #45a049;
+    }
+
+    .filter-buttons button {
+      background-color: #2196F3;
+    }
+
+    .filter-buttons button:hover {
+      background-color: #1976D2;
+    }
+
+    .event-button.red {
+      background-color: red;
+    }
+
+    .event-button.blue {
+      background-color: blue;
+    }
+
+    .version-button {
+      background-color: #666;
+      font-size: 14px;
+      padding: 6px 10px;
+    }
+
+    .version-button:hover {
+      background-color: #888;
+    }
 
     .event-details {
       display: none;
       margin: 20px auto;
       width: 80%;
-      background-color: rgba(0, 0, 0, 0.8);
+      background-color: rgba(0, 0, 0, 0.85);
       padding: 15px;
       border-radius: 5px;
       text-align: left;
     }
 
     .back-button {
-      margin-top: 10px;
+      margin-top: 15px;
       padding: 8px 16px;
       background-color: #f44336;
       border: none;
@@ -58,144 +88,353 @@
       width: fit-content;
     }
 
-    .back-button:hover { background-color: #d32f2f; }
+    .back-button:hover {
+      background-color: #d32f2f;
+    }
+
+    .versions-container {
+      margin-top: 20px;
+    }
+
+    .versions-container ul {
+      padding-left: 20px;
+    }
+
+    .versions-container li {
+      margin-bottom: 8px;
+    }
   </style>
 </head>
+
 <body>
 
   <div class="filter-buttons"></div>
   <div class="event-list"></div>
   <div class="event-details"></div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
   <script>
+
     const apiURL = 'https://sheetdb.io/api/v1/lzahnx5965cxk';
+
     let eventData = [];
 
     function getDataFromApi() {
+
       axios.get(apiURL)
+
         .then(response => {
+
           eventData = response.data;
+
           generateFilterButtons(eventData);
         })
+
         .catch(error => {
+
           console.error('Error al obtener datos:', error);
-          document.querySelector('.filter-buttons').innerHTML = '<p>Error al cargar eventos.</p>';
+
+          document.querySelector('.filter-buttons').innerHTML =
+            '<p>Error al cargar eventos.</p>';
         });
     }
 
     function generateFilterButtons(data) {
-      const uniqueDepartments = [...new Set(data.map(item => item.Departamento))].sort();
-      const filterButtonsContainer = document.querySelector('.filter-buttons');
+
+      const uniqueDepartments =
+
+        [...new Set(
+          data
+            .map(item => item.Departamento)
+            .filter(Boolean)
+        )]
+
+        .sort();
+
+      const filterButtonsContainer =
+        document.querySelector('.filter-buttons');
+
       filterButtonsContainer.innerHTML = '';
 
       uniqueDepartments.forEach(department => {
+
         const button = document.createElement('button');
+
         button.textContent = department;
-        button.onclick = function() {
+
+        button.onclick = function () {
+
           filterEventsByDepartment(department);
         };
+
         filterButtonsContainer.appendChild(button);
       });
     }
 
     function filterEventsByDepartment(department) {
-      const filteredEvents = eventData.filter(row => row.Departamento === department);
-      const groupedEvents = groupEventsByMostRecent(filteredEvents);
+
+      const filteredEvents =
+
+        eventData.filter(
+          row => row.Departamento === department
+        );
+
+      const groupedEvents =
+        groupEventsByMostRecent(filteredEvents);
+
       displayEventButtons(groupedEvents);
     }
 
     function groupEventsByMostRecent(events) {
+
       const eventMap = new Map();
 
       events.forEach(event => {
-        const eventNumber = event["Número de liceo"] && event["Número de liceo"].trim() !== '' ? event["Número de liceo"] : 'Desconocido';
-        const key = `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
-        const existingEvents = eventMap.get(key) || [];
 
-        let eventDate = parseDate(event["Marca temporal"]);
-        existingEvents.push({ ...event, eventDate, Numero: eventNumber });
+        const eventNumber =
+
+          event["Número de liceo"] &&
+          event["Número de liceo"].trim() !== ''
+
+            ? event["Número de liceo"].trim()
+
+            : 'Desconocido';
+
+        const key =
+          `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
+
+        const existingEvents =
+          eventMap.get(key) || [];
+
+        const eventDate =
+          parseDate(event["Marca temporal"]);
+
+        existingEvents.push({
+          ...event,
+          eventDate
+        });
 
         eventMap.set(key, existingEvents);
       });
 
       return Array.from(eventMap.values()).map(eventList => {
-        eventList.sort((a, b) => (b.eventDate || 0) - (a.eventDate || 0));
+
+        eventList.sort((a, b) => {
+
+          if (!a.eventDate && !b.eventDate) return 0;
+
+          if (!a.eventDate) return 1;
+
+          if (!b.eventDate) return -1;
+
+          return b.eventDate - a.eventDate;
+        });
+
         return eventList;
       });
     }
 
     function parseDate(dateStr) {
-      if (!dateStr || dateStr.trim() === '') return null;
-      return new Date(dateStr.replace(/(\d+)\/(\d+)\/(\d+) (\d+:\d+:\d+)/, '$2/$1/$3 $4'));
+
+      if (!dateStr || dateStr.trim() === '') {
+        return null;
+      }
+
+      try {
+
+        const parts = dateStr.split(' ');
+
+        const datePart = parts[0];
+
+        const timePart = parts[1] || '00:00:00';
+
+        const [day, month, year] = datePart.split('/');
+
+        return new Date(
+          `${year}-${month}-${day}T${timePart}`
+        );
+
+      } catch (e) {
+
+        return null;
+      }
     }
 
     function displayEventButtons(eventGroups) {
-      const eventList = document.querySelector('.event-list');
+
+      const eventList =
+        document.querySelector('.event-list');
+
       eventList.innerHTML = '';
 
       if (eventGroups.length === 0) {
-        eventList.innerHTML = '<p>No hay eventos en este departamento.</p>';
+
+        eventList.innerHTML =
+          '<p>No hay eventos en este departamento.</p>';
+
         return;
       }
 
-      // Ordenar los eventos primero por ciudad y luego por número de liceo
+      // ORDENAR
       eventGroups.sort((a, b) => {
-        if (a[0].Ciudad < b[0].Ciudad) return -1;
-        if (a[0].Ciudad > b[0].Ciudad) return 1;
 
-        const numA = parseInt(a[0]["Número de liceo"], 10) || 0;
-        const numB = parseInt(b[0]["Número de liceo"], 10) || 0;
+        const cityCompare =
+          a[0].Ciudad.localeCompare(b[0].Ciudad);
+
+        if (cityCompare !== 0) {
+          return cityCompare;
+        }
+
+        const numA =
+          parseInt(a[0]["Número de liceo"]) || 0;
+
+        const numB =
+          parseInt(b[0]["Número de liceo"]) || 0;
 
         return numA - numB;
       });
 
-      const currentYear = new Date().getFullYear();
+      const currentYear =
+        new Date().getFullYear();
 
       eventGroups.forEach(events => {
-        const latestEvent = events[0];
-        const eventButton = document.createElement('button');
-        eventButton.classList.add('event-button');
-        eventButton.textContent = `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"]}`;
 
-        if (!latestEvent.Telescopio && !latestEvent.Accesorios && !latestEvent.Horario && !latestEvent["Otros"]) {
+        const latestEvent = events[0];
+
+        const eventButton =
+          document.createElement('button');
+
+        eventButton.classList.add('event-button');
+
+        eventButton.textContent =
+          `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"] || 'Desconocido'}`;
+
+        // ROJO
+        if (
+          !latestEvent.Telescopio &&
+          !latestEvent.Accesorios &&
+          !latestEvent.Horario &&
+          !latestEvent["Otros"]
+        ) {
+
           eventButton.classList.add('red');
-        } else if (latestEvent.eventDate && latestEvent.eventDate.getFullYear() === currentYear) {
+        }
+
+        // AZUL
+        else if (
+          latestEvent.eventDate &&
+          latestEvent.eventDate.getFullYear() === currentYear
+        ) {
+
           eventButton.classList.add('blue');
         }
 
-        eventButton.onclick = function() {
+        eventButton.onclick = function () {
+
           displayEventDetails(events, latestEvent);
         };
+
         eventList.appendChild(eventButton);
       });
     }
 
     function displayEventDetails(eventVersions, selectedEvent) {
-      const eventDetailsContainer = document.querySelector('.event-details');
+
+      const eventDetailsContainer =
+        document.querySelector('.event-details');
+
       eventDetailsContainer.style.display = 'block';
 
-      let detailsHTML = `<p><strong>${selectedEvent.Ciudad}</strong></p>`;
-      detailsHTML += `<p><strong>Número:</strong> ${selectedEvent["Número de liceo"]}</p>`;
-      detailsHTML += `<p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>`;
+      let detailsHTML = '';
 
-      // Generar dinámicamente los detalles basados en las columnas
+      detailsHTML += `
+        <p>
+          <strong>${selectedEvent.Ciudad || 'Sin ciudad'}</strong>
+        </p>
+
+        <p>
+          <strong>Número:</strong>
+          ${selectedEvent["Número de liceo"] || 'Desconocido'}
+        </p>
+
+        <p>
+          <strong>Fecha:</strong>
+          ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}
+        </p>
+      `;
+
       Object.keys(selectedEvent).forEach(key => {
-        if (!["Marca temporal", "Departamento", "Ciudad", "Número de liceo", "eventDate"].includes(key)) {
-          detailsHTML += `<p><strong>${key}:</strong> ${selectedEvent[key] || 'No disponible'}</p>`;
+
+        if (
+          [
+            "Marca temporal",
+            "Departamento",
+            "Ciudad",
+            "Número de liceo",
+            "eventDate"
+          ].includes(key)
+        ) {
+          return;
         }
+
+        detailsHTML += `
+          <p>
+            <strong>${key}:</strong>
+            ${selectedEvent[key] || 'No disponible'}
+          </p>
+        `;
       });
 
-      detailsHTML += `<button class="back-button" onclick="hideEventDetails()">Volver</button>`;
+      // VERSIONES
+      if (eventVersions.length > 0) {
+
+        detailsHTML += `
+          <div class="versions-container">
+            <h3>Versiones:</h3>
+            <ul>
+        `;
+
+        eventVersions.forEach(event => {
+
+          detailsHTML += `
+            <li>
+              <button
+                class="version-button"
+                onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'
+              >
+                ${event["Marca temporal"] || 'Sin fecha'}
+              </button>
+            </li>
+          `;
+        });
+
+        detailsHTML += `
+            </ul>
+          </div>
+        `;
+      }
+
+      detailsHTML += `
+        <button
+          class="back-button"
+          onclick="hideEventDetails()"
+        >
+          Volver
+        </button>
+      `;
+
       eventDetailsContainer.innerHTML = detailsHTML;
     }
 
     function hideEventDetails() {
-      document.querySelector('.event-details').style.display = 'none';
+
+      document.querySelector('.event-details')
+        .style.display = 'none';
     }
 
     window.onload = getDataFromApi;
+
   </script>
 
 </body>
