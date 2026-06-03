@@ -121,36 +121,24 @@
     let eventData = [];
 
     function getDataFromApi() {
-
       axios.get(apiURL)
-
         .then(response => {
-
           eventData = response.data;
-
           generateFilterButtons(eventData);
         })
-
         .catch(error => {
-
           console.error('Error al obtener datos:', error);
-
-          document.querySelector('.filter-buttons').innerHTML =
-            '<p>Error al cargar eventos.</p>';
         });
     }
 
     function generateFilterButtons(data) {
 
       const uniqueDepartments =
-
         [...new Set(
           data
             .map(item => item.Departamento)
             .filter(Boolean)
-        )]
-
-        .sort();
+        )].sort();
 
       const filterButtonsContainer =
         document.querySelector('.filter-buttons');
@@ -164,7 +152,6 @@
         button.textContent = department;
 
         button.onclick = function () {
-
           filterEventsByDepartment(department);
         };
 
@@ -175,7 +162,6 @@
     function filterEventsByDepartment(department) {
 
       const filteredEvents =
-
         eventData.filter(
           row => row.Departamento === department
         );
@@ -193,12 +179,9 @@
       events.forEach(event => {
 
         const eventNumber =
-
           event["Número de liceo"] &&
           event["Número de liceo"].trim() !== ''
-
             ? event["Número de liceo"].trim()
-
             : 'Desconocido';
 
         const key =
@@ -223,9 +206,7 @@
         eventList.sort((a, b) => {
 
           if (!a.eventDate && !b.eventDate) return 0;
-
           if (!a.eventDate) return 1;
-
           if (!b.eventDate) return -1;
 
           return b.eventDate - a.eventDate;
@@ -237,29 +218,43 @@
 
     function parseDate(dateStr) {
 
-      if (!dateStr || dateStr.trim() === '') {
-        return null;
-      }
+  if (!dateStr || dateStr.trim() === '') {
+    return null;
+  }
 
-      try {
+  try {
 
-        const parts = dateStr.split(' ');
+    const [datePart, timePart = '00:00:00'] =
+      dateStr.trim().split(' ');
 
-        const datePart = parts[0];
+    const [day, month, year] =
+      datePart.split('/').map(Number);
 
-        const timePart = parts[1] || '00:00:00';
+    const [hours = 0, minutes = 0, seconds = 0] =
+      timePart.split(':').map(Number);
 
-        const [day, month, year] = datePart.split('/');
+    const parsedDate = new Date(
+      year,
+      month - 1,
+      day,
+      hours,
+      minutes,
+      seconds
+    );
 
-        return new Date(
-          `${year}-${month}-${day}T${timePart}`
-        );
-
-      } catch (e) {
-
-        return null;
-      }
+    if (isNaN(parsedDate.getTime())) {
+      return null;
     }
+
+    return parsedDate;
+
+  } catch (e) {
+
+    console.error("Error parseando fecha:", dateStr);
+
+    return null;
+  }
+}
 
     function displayEventButtons(eventGroups) {
 
@@ -268,15 +263,9 @@
 
       eventList.innerHTML = '';
 
-      if (eventGroups.length === 0) {
+      const currentYear =
+        new Date().getFullYear();
 
-        eventList.innerHTML =
-          '<p>No hay eventos en este departamento.</p>';
-
-        return;
-      }
-
-      // ORDENAR
       eventGroups.sort((a, b) => {
 
         const cityCompare =
@@ -295,12 +284,19 @@
         return numA - numB;
       });
 
-      const currentYear =
-        new Date().getFullYear();
-
       eventGroups.forEach(events => {
 
         const latestEvent = events[0];
+
+        console.log(
+          "DEBUG",
+          latestEvent.Ciudad,
+          latestEvent["Número de liceo"],
+          latestEvent["Marca temporal"],
+          latestEvent.eventDate,
+          latestEvent.eventDate?.getFullYear?.(),
+          currentYear
+        );
 
         const eventButton =
           document.createElement('button');
@@ -310,7 +306,6 @@
         eventButton.textContent =
           `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"] || 'Desconocido'}`;
 
-        // ROJO
         if (
           !latestEvent.Telescopio &&
           !latestEvent.Accesorios &&
@@ -321,7 +316,6 @@
           eventButton.classList.add('red');
         }
 
-        // AZUL
         else if (
           latestEvent.eventDate &&
           latestEvent.eventDate.getFullYear() === currentYear
@@ -331,7 +325,6 @@
         }
 
         eventButton.onclick = function () {
-
           displayEventDetails(events, latestEvent);
         };
 
@@ -349,19 +342,9 @@
       let detailsHTML = '';
 
       detailsHTML += `
-        <p>
-          <strong>${selectedEvent.Ciudad || 'Sin ciudad'}</strong>
-        </p>
-
-        <p>
-          <strong>Número:</strong>
-          ${selectedEvent["Número de liceo"] || 'Desconocido'}
-        </p>
-
-        <p>
-          <strong>Fecha:</strong>
-          ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}
-        </p>
+        <p><strong>${selectedEvent.Ciudad}</strong></p>
+        <p><strong>Número:</strong> ${selectedEvent["Número de liceo"] || 'Desconocido'}</p>
+        <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
       `;
 
       Object.keys(selectedEvent).forEach(key => {
@@ -374,9 +357,7 @@
             "Número de liceo",
             "eventDate"
           ].includes(key)
-        ) {
-          return;
-        }
+        ) return;
 
         detailsHTML += `
           <p>
@@ -386,7 +367,6 @@
         `;
       });
 
-      // VERSIONES
       if (eventVersions.length > 0) {
 
         detailsHTML += `
@@ -416,10 +396,7 @@
       }
 
       detailsHTML += `
-        <button
-          class="back-button"
-          onclick="hideEventDetails()"
-        >
+        <button class="back-button" onclick="hideEventDetails()">
           Volver
         </button>
       `;
@@ -428,9 +405,7 @@
     }
 
     function hideEventDetails() {
-
-      document.querySelector('.event-details')
-        .style.display = 'none';
+      document.querySelector('.event-details').style.display = 'none';
     }
 
     window.onload = getDataFromApi;
