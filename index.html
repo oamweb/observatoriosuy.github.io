@@ -55,10 +55,10 @@
     .event-button.blue {
       background-color: blue;
     }
-    
+
     .event-button.black {
-  background-color: black;
-}
+      background-color: black;
+    }
 
     .version-button {
       background-color: #666;
@@ -107,330 +107,1202 @@
     .versions-container li {
       margin-bottom: 8px;
     }
+
+    .error-message {
+      text-align: center;
+      margin: 30px auto;
+      padding: 20px;
+      width: 80%;
+      background-color: rgba(180, 0, 0, 0.85);
+      border-radius: 5px;
+    }
+
+    .loading-message {
+      text-align: center;
+      margin-top: 30px;
+    }
   </style>
 </head>
 
 <body>
 
   <div class="filter-buttons"></div>
-  <div class="event-list"></div>
+
+  <div class="event-list">
+    <div class="loading-message">
+      Cargando datos...
+    </div>
+  </div>
+
   <div class="event-details"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
   <script>
 
-    const apiURL = 'https://sheetdb.io/api/v1/lzahnx5965cxk';
+    /*
+     * ============================================================
+     * ARCHIVO DE DATOS
+     * ============================================================
+     *
+     * eventos.csv debe estar en la misma carpeta que index.html
+     *
+     * Ejemplo:
+     *
+     * repositorio/
+     * ├── index.html
+     * └── eventos.csv
+     *
+     */
+
+    const csvURL = './eventos.csv';
 
     let eventData = [];
 
-    function getDataFromApi() {
-      axios.get(apiURL)
-        .then(response => {
-          eventData = response.data;
-          generateFilterButtons(eventData);
-        })
-        .catch(error => {
-          console.error('Error al obtener datos:', error);
+
+    /*
+     * ============================================================
+     * CARGAR CSV
+     * ============================================================
+     */
+
+    async function getDataFromFile() {
+
+      try {
+
+        const response = await fetch(csvURL);
+
+        if (!response.ok) {
+          throw new Error(
+            `HTTP ${response.status}`
+          );
+        }
+
+        const csvText = await response.text();
+
+        eventData = parseCSV(csvText);
+
+        console.log(
+          `Datos cargados correctamente: ${eventData.length} registros`
+        );
+
+        if (eventData.length === 0) {
+          throw new Error(
+            'El archivo CSV no contiene registros.'
+          );
+        }
+
+        generateFilterButtons(eventData);
+
+      } catch (error) {
+
+        console.error(
+          'Error al cargar eventos.csv:',
+          error
+        );
+
+        document.querySelector(
+          '.event-list'
+        ).innerHTML = `
+          <div class="error-message">
+            <strong>Error al cargar los datos</strong>
+            <br><br>
+            No se pudo cargar <strong>eventos.csv</strong>.
+            <br><br>
+            Comprueba que el archivo esté en la misma carpeta
+            que <strong>index.html</strong>.
+            <br><br>
+            <small>
+              ${escapeHTML(error.message)}
+            </small>
+          </div>
+        `;
+      }
+    }
+
+
+    /*
+     * ============================================================
+     * PARSER CSV
+     * ============================================================
+     *
+     * Este parser soporta:
+     *
+     * - Campos separados por coma
+     * - Campos entre comillas
+     * - Comas dentro de campos
+     * - Saltos de línea dentro de campos
+     * - Comillas dobles escapadas
+     * - UTF-8
+     *
+     * Es necesario porque el CSV descargado desde Google
+     * contiene campos con textos multilínea.
+     */
+
+    function parseCSV(csv) {
+
+      const rows = [];
+
+      let row = [];
+      let field = '';
+
+      let insideQuotes = false;
+
+
+      for (let i = 0; i < csv.length; i++) {
+
+        const char = csv[i];
+        const nextChar = csv[i + 1];
+
+
+        /*
+         * Comillas
+         */
+
+        if (char === '"') {
+
+          /*
+           * Dos comillas dentro de un campo
+           * representan una comilla real.
+           */
+
+          if (
+            insideQuotes &&
+            nextChar === '"'
+          ) {
+
+            field += '"';
+
+            i++;
+
+          } else {
+
+            insideQuotes =
+              !insideQuotes;
+
+          }
+
+        }
+
+
+        /*
+         * Separador de columnas
+         */
+
+        else if (
+          char === ',' &&
+          !insideQuotes
+        ) {
+
+          row.push(field);
+
+          field = '';
+
+        }
+
+
+        /*
+         * Fin de fila
+         */
+
+        else if (
+          (char === '\n' ||
+           char === '\r') &&
+          !insideQuotes
+        ) {
+
+          /*
+           * Windows usa \r\n.
+           */
+
+          if (
+            char === '\r' &&
+            nextChar === '\n'
+          ) {
+            i++;
+          }
+
+          row.push(field);
+
+          field = '';
+
+
+          /*
+           * Ignorar filas completamente vacías.
+           */
+
+          if (
+            row.some(
+              value =>
+                value.trim() !== ''
+            )
+          ) {
+
+            rows.push(row);
+
+          }
+
+          row = [];
+
+        }
+
+
+        /*
+         * Cualquier otro carácter
+         */
+
+        else {
+
+          field += char;
+
+        }
+      }
+
+
+      /*
+       * Procesar la última fila.
+       */
+
+      if (
+        field !== '' ||
+        row.length > 0
+      ) {
+
+        row.push(field);
+
+        if (
+          row.some(
+            value =>
+              value.trim() !== ''
+          )
+        ) {
+
+          rows.push(row);
+
+        }
+      }
+
+
+      /*
+       * Si no hay datos.
+       */
+
+      if (rows.length === 0) {
+        return [];
+      }
+
+
+      /*
+       * La primera fila contiene
+       * los nombres de las columnas.
+       */
+
+      const headers =
+        rows[0].map(
+          header =>
+            header
+              .trim()
+              .replace(/^\uFEFF/, '')
+        );
+
+
+      /*
+       * Convertir las filas en objetos.
+       */
+
+      return rows
+        .slice(1)
+        .map(row => {
+
+          const object = {};
+
+          headers.forEach(
+            (header, index) => {
+
+              object[header] =
+                row[index] !== undefined
+                  ? row[index].trim()
+                  : '';
+
+            }
+          );
+
+          return object;
+
         });
     }
+
+
+    /*
+     * ============================================================
+     * BOTONES DE DEPARTAMENTOS
+     * ============================================================
+     */
 
     function generateFilterButtons(data) {
 
       const uniqueDepartments =
-        [...new Set(
-          data
-            .map(item => item.Departamento)
-            .filter(Boolean)
-        )].sort();
+        [
+          ...new Set(
+            data
+              .map(
+                item =>
+                  item.Departamento
+              )
+              .filter(Boolean)
+          )
+        ].sort(
+          (a, b) =>
+            a.localeCompare(
+              b,
+              'es'
+            )
+        );
+
 
       const filterButtonsContainer =
-        document.querySelector('.filter-buttons');
+        document.querySelector(
+          '.filter-buttons'
+        );
+
 
       filterButtonsContainer.innerHTML = '';
 
-      uniqueDepartments.forEach(department => {
 
-        const button = document.createElement('button');
+      uniqueDepartments.forEach(
+        department => {
 
-        button.textContent = department;
+          const button =
+            document.createElement(
+              'button'
+            );
 
-        button.onclick = function () {
-          filterEventsByDepartment(department);
-        };
+          button.textContent =
+            department;
 
-        filterButtonsContainer.appendChild(button);
-      });
+
+          button.onclick =
+            function () {
+
+              filterEventsByDepartment(
+                department
+              );
+
+            };
+
+
+          filterButtonsContainer
+            .appendChild(button);
+
+        }
+      );
     }
 
-    function filterEventsByDepartment(department) {
+
+    /*
+     * ============================================================
+     * FILTRAR POR DEPARTAMENTO
+     * ============================================================
+     */
+
+    function filterEventsByDepartment(
+      department
+    ) {
 
       const filteredEvents =
         eventData.filter(
-          row => row.Departamento === department
+          row =>
+            row.Departamento ===
+            department
         );
 
+
       const groupedEvents =
-        groupEventsByMostRecent(filteredEvents);
+        groupEventsByMostRecent(
+          filteredEvents
+        );
 
-      displayEventButtons(groupedEvents);
+
+      displayEventButtons(
+        groupedEvents
+      );
     }
 
-    function groupEventsByMostRecent(events) {
 
-      const eventMap = new Map();
+    /*
+     * ============================================================
+     * AGRUPAR VERSIONES
+     * ============================================================
+     *
+     * Cada combinación:
+     *
+     * Departamento + Localidad + Número de liceo
+     *
+     * representa un mismo lugar.
+     *
+     * Si existen varias respuestas para ese lugar,
+     * se muestran como versiones.
+     */
 
-      events.forEach(event => {
+    function groupEventsByMostRecent(
+      events
+    ) {
 
-        const eventNumber =
-          event["Número de liceo"] &&
-          event["Número de liceo"].trim() !== ''
-            ? event["Número de liceo"].trim()
-            : 'Desconocido';
+      const eventMap =
+        new Map();
 
-        const key =
-          `${event.Departamento}-${event.Ciudad}-${eventNumber}`;
 
-        const existingEvents =
-          eventMap.get(key) || [];
+      events.forEach(
+        event => {
 
-        const eventDate =
-          parseDate(event["Marca temporal"]);
+          const eventNumber =
+            event["Número de liceo"] &&
+            event["Número de liceo"]
+              .trim() !== ''
+              ? event["Número de liceo"]
+                  .trim()
+              : 'Desconocido';
 
-        existingEvents.push({
-          ...event,
-          eventDate
-        });
 
-        eventMap.set(key, existingEvents);
-      });
+          const key =
+            `${event.Departamento}-${event.Localidad}-${eventNumber}`;
 
-      return Array.from(eventMap.values()).map(eventList => {
 
-        eventList.sort((a, b) => {
+          const existingEvents =
+            eventMap.get(key) || [];
 
-          if (!a.eventDate && !b.eventDate) return 0;
-          if (!a.eventDate) return 1;
-          if (!b.eventDate) return -1;
 
-          return b.eventDate - a.eventDate;
-        });
+          const eventDate =
+            parseDate(
+              event["Marca temporal"]
+            );
 
-        return eventList;
-      });
+
+          existingEvents.push({
+
+            ...event,
+
+            eventDate
+
+          });
+
+
+          eventMap.set(
+            key,
+            existingEvents
+          );
+
+        }
+      );
+
+
+      /*
+       * Ordenar cada grupo de versiones
+       * desde la más reciente a la más antigua.
+       */
+
+      return Array
+        .from(
+          eventMap.values()
+        )
+        .map(
+          eventList => {
+
+            eventList.sort(
+              (a, b) => {
+
+                if (
+                  !a.eventDate &&
+                  !b.eventDate
+                ) {
+                  return 0;
+                }
+
+                if (!a.eventDate) {
+                  return 1;
+                }
+
+                if (!b.eventDate) {
+                  return -1;
+                }
+
+                return (
+                  b.eventDate -
+                  a.eventDate
+                );
+
+              }
+            );
+
+            return eventList;
+
+          }
+        );
     }
+
+
+    /*
+     * ============================================================
+     * PARSEAR FECHAS
+     * ============================================================
+     *
+     * El CSV contiene fechas como:
+     *
+     * 7/5/2026
+     *
+     * y:
+     *
+     * 26/12/2026 17:57:47
+     *
+     */
 
     function parseDate(dateStr) {
 
-  if (!dateStr || dateStr.trim() === '') {
-    return null;
-  }
+      if (
+        !dateStr ||
+        dateStr.trim() === ''
+      ) {
 
-  try {
+        return null;
 
-    const [datePart, timePart = '00:00:00'] =
-      dateStr.trim().split(' ');
+      }
 
-    const [day, month, year] =
-      datePart.split('/').map(Number);
 
-    const [hours = 0, minutes = 0, seconds = 0] =
-      timePart.split(':').map(Number);
+      try {
 
-    const parsedDate = new Date(
-      year,
-      month - 1,
-      day,
-      hours,
-      minutes,
-      seconds
-    );
+        const parts =
+          dateStr
+            .trim()
+            .split(/\s+/);
 
-    if (isNaN(parsedDate.getTime())) {
-      return null;
+
+        const datePart =
+          parts[0];
+
+
+        const timePart =
+          parts[1] ||
+          '00:00:00';
+
+
+        const dateComponents =
+          datePart
+            .split('/')
+            .map(Number);
+
+
+        if (
+          dateComponents.length !== 3
+        ) {
+
+          return null;
+
+        }
+
+
+        const [
+          day,
+          month,
+          year
+        ] = dateComponents;
+
+
+        const timeComponents =
+          timePart
+            .split(':')
+            .map(Number);
+
+
+        const hours =
+          timeComponents[0] || 0;
+
+        const minutes =
+          timeComponents[1] || 0;
+
+        const seconds =
+          timeComponents[2] || 0;
+
+
+        const parsedDate =
+          new Date(
+            year,
+            month - 1,
+            day,
+            hours,
+            minutes,
+            seconds
+          );
+
+
+        if (
+          isNaN(
+            parsedDate.getTime()
+          )
+        ) {
+
+          return null;
+
+        }
+
+
+        return parsedDate;
+
+      } catch (error) {
+
+        console.error(
+          'Error parseando fecha:',
+          dateStr,
+          error
+        );
+
+        return null;
+
+      }
     }
 
-    return parsedDate;
 
-  } catch (e) {
+    /*
+     * ============================================================
+     * MOSTRAR BOTONES DE EVENTOS
+     * ============================================================
+     */
 
-    console.error("Error parseando fecha:", dateStr);
-
-    return null;
-  }
-}
-
-    function displayEventButtons(eventGroups) {
+    function displayEventButtons(
+      eventGroups
+    ) {
 
       const eventList =
-        document.querySelector('.event-list');
+        document.querySelector(
+          '.event-list'
+        );
+
 
       eventList.innerHTML = '';
 
+
       const currentYear =
-        new Date().getFullYear();
+        new Date()
+          .getFullYear();
 
-      eventGroups.sort((a, b) => {
 
-        const cityCompare =
-          a[0].Ciudad.localeCompare(b[0].Ciudad);
+      /*
+       * Ordenar:
+       *
+       * 1. Localidad
+       * 2. Número de liceo
+       */
 
-        if (cityCompare !== 0) {
-          return cityCompare;
+      eventGroups.sort(
+        (a, b) => {
+
+          const cityA =
+            a[0].Localidad || '';
+
+          const cityB =
+            b[0].Localidad || '';
+
+
+          const cityCompare =
+            cityA.localeCompare(
+              cityB,
+              'es'
+            );
+
+
+          if (
+            cityCompare !== 0
+          ) {
+
+            return cityCompare;
+
+          }
+
+
+          const numA =
+            parseInt(
+              a[0]["Número de liceo"]
+            ) || 0;
+
+
+          const numB =
+            parseInt(
+              b[0]["Número de liceo"]
+            ) || 0;
+
+
+          return numA - numB;
+
         }
+      );
 
-        const numA =
-          parseInt(a[0]["Número de liceo"]) || 0;
 
-        const numB =
-          parseInt(b[0]["Número de liceo"]) || 0;
+      /*
+       * Crear botón para cada lugar.
+       */
 
-        return numA - numB;
-      });
+      eventGroups.forEach(
+        events => {
 
-      eventGroups.forEach(events => {
+          /*
+           * El primer elemento es la
+           * versión más reciente.
+           */
 
-        const latestEvent = events[0];
+          const latestEvent =
+            events[0];
 
-        console.log(
-          "DEBUG",
-          latestEvent.Ciudad,
-          latestEvent["Número de liceo"],
-          latestEvent["Marca temporal"],
-          latestEvent.eventDate,
-          latestEvent.eventDate?.getFullYear?.(),
-          currentYear
-        );
 
-        const eventButton =
-          document.createElement('button');
+          const eventButton =
+            document.createElement(
+              'button'
+            );
 
-        eventButton.classList.add('event-button');
 
-        eventButton.textContent =
-          `${latestEvent.Ciudad} - ${latestEvent["Número de liceo"] || 'Desconocido'}`;
+          eventButton.classList.add(
+            'event-button'
+          );
 
-console.log(
-  "COLOR CHECK",
-  latestEvent.Ciudad,
-  latestEvent["Número de liceo"],
-  latestEvent["Docente 1"]
-);
 
-        if (
-  latestEvent["Docente 1"] &&
-  latestEvent["Docente 1"]
-    .toString()
-    .trim()
-    .toUpperCase() === "CERRADO"
-) {
+          eventButton.textContent =
+            `${latestEvent.Localidad || 'Sin localidad'} - ${latestEvent["Número de liceo"] || 'Desconocido'}`;
 
-  eventButton.classList.add('black');
-}
 
-else if (
-  !latestEvent.Telescopio &&
-  !latestEvent.Accesorios &&
-  !latestEvent.Horario &&
-  !latestEvent["Otros"]
-) {
+          /*
+           * ======================================================
+           * COLOR NEGRO
+           * ======================================================
+           *
+           * Si Docente/s dice CERRADO.
+           */
 
-  eventButton.classList.add('red');
-}
+          if (
+            latestEvent["Docente/s"] &&
+            latestEvent["Docente/s"]
+              .toString()
+              .trim()
+              .toUpperCase() ===
+              'CERRADO'
+          ) {
 
-else if (
-  latestEvent.eventDate &&
-  latestEvent.eventDate.getFullYear() === currentYear
-) {
+            eventButton.classList.add(
+              'black'
+            );
 
-  eventButton.classList.add('blue');
-}
+          }
 
-        eventButton.onclick = function () {
-          displayEventDetails(events, latestEvent);
-        };
 
-        eventList.appendChild(eventButton);
-      });
+          /*
+           * ======================================================
+           * COLOR ROJO
+           * ======================================================
+           *
+           * Si no hay información en:
+           *
+           * Telescopio principal
+           * Accesorios
+           * Horarios
+           * Otros
+           */
+
+          else if (
+            !hasValue(
+              latestEvent[
+                "Telescopio principal"
+              ]
+            ) &&
+            !hasValue(
+              latestEvent[
+                "Accesorios"
+              ]
+            ) &&
+            !hasValue(
+              latestEvent[
+                "Horarios por docente en el observatorio"
+              ]
+            ) &&
+            !hasValue(
+              latestEvent[
+                "Otros"
+              ]
+            )
+          ) {
+
+            eventButton.classList.add(
+              'red'
+            );
+
+          }
+
+
+          /*
+           * ======================================================
+           * COLOR AZUL
+           * ======================================================
+           *
+           * Si el registro más reciente
+           * pertenece al año actual.
+           */
+
+          else if (
+            latestEvent.eventDate &&
+            latestEvent.eventDate
+              .getFullYear() ===
+              currentYear
+          ) {
+
+            eventButton.classList.add(
+              'blue'
+            );
+
+          }
+
+
+          /*
+           * Al hacer clic,
+           * mostrar los detalles.
+           */
+
+          eventButton.onclick =
+            function () {
+
+              displayEventDetails(
+                events,
+                latestEvent
+              );
+
+            };
+
+
+          eventList.appendChild(
+            eventButton
+          );
+
+        }
+      );
     }
 
-    function displayEventDetails(eventVersions, selectedEvent) {
+
+    /*
+     * ============================================================
+     * COMPROBAR SI UN CAMPO TIENE CONTENIDO
+     * ============================================================
+     */
+
+    function hasValue(value) {
+
+      return (
+        value !== undefined &&
+        value !== null &&
+        value.toString().trim() !== ''
+      );
+
+    }
+
+
+    /*
+     * ============================================================
+     * MOSTRAR DETALLES DEL EVENTO
+     * ============================================================
+     */
+
+    function displayEventDetails(
+      eventVersions,
+      selectedEvent
+    ) {
 
       const eventDetailsContainer =
-        document.querySelector('.event-details');
+        document.querySelector(
+          '.event-details'
+        );
 
-      eventDetailsContainer.style.display = 'block';
+
+      eventDetailsContainer.style.display =
+        'block';
+
 
       let detailsHTML = '';
 
+
+      /*
+       * Información principal.
+       */
+
       detailsHTML += `
-        <p><strong>${selectedEvent.Ciudad}</strong></p>
-        <p><strong>Número:</strong> ${selectedEvent["Número de liceo"] || 'Desconocido'}</p>
-        <p><strong>Fecha:</strong> ${selectedEvent["Marca temporal"] || 'Sin fecha registrada'}</p>
+
+        <p>
+          <strong>
+            ${escapeHTML(
+              selectedEvent.Localidad ||
+              ''
+            )}
+          </strong>
+        </p>
+
+        <p>
+          <strong>Número:</strong>
+          ${escapeHTML(
+            selectedEvent[
+              "Número de liceo"
+            ] ||
+            'Desconocido'
+          )}
+        </p>
+
+        <p>
+          <strong>Fecha:</strong>
+          ${escapeHTML(
+            selectedEvent[
+              "Marca temporal"
+            ] ||
+            'Sin fecha registrada'
+          )}
+        </p>
+
       `;
 
-      Object.keys(selectedEvent).forEach(key => {
 
-        if (
-          [
-            "Marca temporal",
-            "Departamento",
-            "Ciudad",
-            "Número de liceo",
-            "eventDate"
-          ].includes(key)
-        ) return;
+      /*
+       * Mostrar todos los demás campos
+       * del CSV.
+       */
 
-        detailsHTML += `
-          <p>
-            <strong>${key}:</strong>
-            ${selectedEvent[key] || 'No disponible'}
-          </p>
-        `;
-      });
+      Object.keys(
+        selectedEvent
+      ).forEach(
+        key => {
 
-      if (eventVersions.length > 0) {
+          /*
+           * Estos campos ya se muestran arriba.
+           */
 
-        detailsHTML += `
-          <div class="versions-container">
-            <h3>Versiones:</h3>
-            <ul>
-        `;
+          if (
+            [
+              "Marca temporal",
+              "Departamento",
+              "Localidad",
+              "Número de liceo",
+              "eventDate"
+            ].includes(key)
+          ) {
 
-        eventVersions.forEach(event => {
+            return;
+
+          }
+
+
+          const value =
+            selectedEvent[key];
+
 
           detailsHTML += `
-            <li>
-              <button
-                class="version-button"
-                onclick='displayEventDetails(${JSON.stringify(eventVersions)}, ${JSON.stringify(event)})'
-              >
-                ${event["Marca temporal"] || 'Sin fecha'}
-              </button>
-            </li>
+
+            <p>
+
+              <strong>
+                ${escapeHTML(key)}:
+              </strong>
+
+              ${hasValue(value)
+                ? escapeHTML(value)
+                : 'No disponible'
+              }
+
+            </p>
+
           `;
-        });
+
+        }
+      );
+
+
+      /*
+       * ==========================================================
+       * VERSIONES
+       * ==========================================================
+       */
+
+      if (
+        eventVersions.length > 1
+      ) {
 
         detailsHTML += `
-            </ul>
-          </div>
+
+          <div class="versions-container">
+
+            <h3>
+              Versiones:
+            </h3>
+
+            <ul>
+
         `;
+
+
+        eventVersions.forEach(
+          (event, index) => {
+
+            detailsHTML += `
+
+              <li>
+
+                <button
+                  class="version-button"
+                  data-version-index="${index}"
+                >
+                  ${escapeHTML(
+                    event[
+                      "Marca temporal"
+                    ] ||
+                    'Sin fecha'
+                  )}
+                </button>
+
+              </li>
+
+            `;
+
+          }
+        );
+
+
+        detailsHTML += `
+
+            </ul>
+
+          </div>
+
+        `;
+
       }
 
+
+      /*
+       * Botón volver.
+       */
+
       detailsHTML += `
-        <button class="back-button" onclick="hideEventDetails()">
+
+        <button
+          class="back-button"
+          onclick="hideEventDetails()"
+        >
           Volver
         </button>
+
       `;
 
-      eventDetailsContainer.innerHTML = detailsHTML;
+
+      eventDetailsContainer.innerHTML =
+        detailsHTML;
+
+
+      /*
+       * ==========================================================
+       * BOTONES DE VERSIONES
+       * ==========================================================
+       */
+
+      const versionButtons =
+        eventDetailsContainer
+          .querySelectorAll(
+            '.version-button'
+          );
+
+
+      versionButtons.forEach(
+        button => {
+
+          button.addEventListener(
+            'click',
+            function () {
+
+              const index =
+                parseInt(
+                  this.dataset
+                    .versionIndex
+                );
+
+
+              displayEventDetails(
+                eventVersions,
+                eventVersions[index]
+              );
+
+            }
+          );
+
+        }
+      );
     }
+
+
+    /*
+     * ============================================================
+     * OCULTAR DETALLES
+     * ============================================================
+     */
 
     function hideEventDetails() {
-      document.querySelector('.event-details').style.display = 'none';
+
+      document.querySelector(
+        '.event-details'
+      ).style.display = 'none';
+
     }
 
-    window.onload = getDataFromApi;
+
+    /*
+     * ============================================================
+     * ESCAPAR HTML
+     * ============================================================
+     *
+     * Evita que un texto contenido en el CSV
+     * pueda interpretarse como código HTML.
+     */
+
+    function escapeHTML(value) {
+
+      if (
+        value === null ||
+        value === undefined
+      ) {
+
+        return '';
+
+      }
+
+
+      return String(value)
+        .replace(
+          /&/g,
+          '&amp;'
+        )
+        .replace(
+          /</g,
+          '&lt;'
+        )
+        .replace(
+          />/g,
+          '&gt;'
+        )
+        .replace(
+          /"/g,
+          '&quot;'
+        )
+        .replace(
+          /'/g,
+          '&#039;'
+        );
+    }
+
+
+    /*
+     * ============================================================
+     * INICIAR PÁGINA
+     * ============================================================
+     */
+
+    window.onload =
+      getDataFromFile;
 
   </script>
 
